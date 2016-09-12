@@ -182,6 +182,9 @@ impl<T> Array2d<T> where T: Copy + Zero {
 }
 
 impl<T> Array2d<T> where T: Copy {
+  pub fn as_mut_slice(&mut self) -> &mut [T] {
+    &mut self.data_buf
+  }
 }
 
 impl<'a, T> AsView<'a, Array2dView<'a, T>> for Array2d<T> where T: Copy {
