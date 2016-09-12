@@ -1,0 +1,11 @@
+[package]
+name = "densearray"
+version = "0.1.0"
+authors = ["Peter Jin <peterhaijin@gmail.com>"]
+
+[lib]
+name = "densearray"
+path = "src/lib.rs"
+
+[dependencies]
+openblas = { path = "../libopenblas" }
