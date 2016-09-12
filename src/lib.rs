@@ -6,6 +6,7 @@ use linalg::{Transpose};
 
 use openblas::ffi::*;
 
+use std::marker::{PhantomData};
 use std::num::{Zero};
 
 pub mod linalg;
@@ -128,17 +129,16 @@ impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for [T] where 
   }
 }
 
-pub struct Array1d<T> where T: Copy {
-  data_buf: Vec<T>,
-  dim:      usize,
-  stride:   usize,
-}
+pub trait ArrayStorage<T>: AsRef<[T]> + AsMut<[T]> {}
 
-/*pub struct Array1d<T, S=Vec<T>> where T: Copy, S: Storage<T> {
+impl<T> ArrayStorage<T> for Vec<T> {}
+
+pub struct Array1d<T, S=Vec<T>> where T: Copy, S: ArrayStorage<T> {
   data_buf: S,
   dim:      usize,
   stride:   usize,
-}*/
+  _marker:  PhantomData<T>,
+}
 
 impl<T> Array1d<T> where T: Copy + Zero {
   pub fn zeros(dim: usize) -> Array1d<T> {
@@ -152,17 +152,19 @@ impl<T> Array1d<T> where T: Copy + Zero {
       data_buf: data,
       dim:      dim,
       stride:   dim.least_stride(),
+      _marker:  PhantomData,
     }
   }
 }
 
-impl<T> Array1d<T> where T: Copy {
+impl<T, S> Array1d<T, S> where T: Copy, S: ArrayStorage<T> {
 }
 
-pub struct Array2d<T> where T: Copy {
-  data_buf: Vec<T>,
+pub struct Array2d<T, S=Vec<T>> where T: Copy, S: ArrayStorage<T> {
+  data_buf: S,
   dim:      (usize, usize),
   stride:   (usize, usize),
+  _marker:  PhantomData<T>,
 }
 
 impl<T> Array2d<T> where T: Copy + Zero {
@@ -177,30 +179,35 @@ impl<T> Array2d<T> where T: Copy + Zero {
       data_buf: data,
       dim:      dim,
       stride:   dim.least_stride(),
+      _marker:  PhantomData,
     }
   }
 }
 
-impl<T> Array2d<T> where T: Copy {
+impl<T, S> Array2d<T, S> where T: Copy, S: ArrayStorage<T> {
+  pub fn as_slice(&self) -> &[T] {
+    self.data_buf.as_ref()
+  }
+
   pub fn as_mut_slice(&mut self) -> &mut [T] {
-    &mut self.data_buf
+    self.data_buf.as_mut()
   }
 }
 
-impl<'a, T> AsView<'a, Array2dView<'a, T>> for Array2d<T> where T: Copy {
+impl<'a, T, S> AsView<'a, Array2dView<'a, T>> for Array2d<T, S> where T: Copy, S: ArrayStorage<T> {
   fn as_view(&'a self) -> Array2dView<'a, T> {
     Array2dView{
-      data_buf: &self.data_buf,
+      data_buf: self.data_buf.as_ref(),
       dim:      self.dim,
       stride:   self.stride,
     }
   }
 }
 
-impl<'a, T> AsViewMut<'a, Array2dViewMut<'a, T>> for Array2d<T> where T: Copy {
+impl<'a, T, S> AsViewMut<'a, Array2dViewMut<'a, T>> for Array2d<T, S> where T: Copy, S: ArrayStorage<T> {
   fn as_view_mut(&'a mut self) -> Array2dViewMut<'a, T> {
     Array2dViewMut{
-      data_buf: &mut self.data_buf,
+      data_buf: self.data_buf.as_mut(),
       dim:      self.dim,
       stride:   self.stride,
     }
