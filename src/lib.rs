@@ -248,11 +248,11 @@ impl<'a> Array2dView<'a, f32> {
 
 impl<'a, T> View<'a, (usize, usize), Array2dView<'a, T>> for Array2dView<'a, T> where T: 'a + Copy {
   fn view(&'a self, lo: (usize, usize), hi: (usize, usize)) -> Array2dView<'a, T> {
-    let lo_offset = lo.offset(self.stride);
-    let hi_offset = hi.offset(self.stride);
     let new_dim = hi.diff(lo);
+    let new_offset = lo.offset(self.stride);
+    let new_offset_end = new_offset + new_dim.flat_len();
     Array2dView{
-      data_buf: &self.data_buf[lo_offset .. hi_offset],
+      data_buf: &self.data_buf[new_offset .. new_offset_end],
       dim:      new_dim,
       stride:   self.stride,
     }
@@ -267,11 +267,11 @@ pub struct Array2dViewMut<'a, T> where T: 'a + Copy {
 
 impl<'a, T> ViewMut<'a, (usize, usize), Array2dViewMut<'a, T>> for Array2dViewMut<'a, T> where T: 'a + Copy {
   fn view_mut(&'a mut self, lo: (usize, usize), hi: (usize, usize)) -> Array2dViewMut<'a, T> {
-    let lo_offset = lo.offset(self.stride);
-    let hi_offset = hi.offset(self.stride);
     let new_dim = hi.diff(lo);
+    let new_offset = lo.offset(self.stride);
+    let new_offset_end = new_offset + new_dim.flat_len();
     Array2dViewMut{
-      data_buf: &mut self.data_buf[lo_offset .. hi_offset],
+      data_buf: &mut self.data_buf[new_offset .. new_offset_end],
       dim:      new_dim,
       stride:   self.stride,
     }
