@@ -287,9 +287,13 @@ impl<'a> Array2dViewMut<'a, f32> {
     self.stride
   }
 
-  pub fn set_constant(&'a mut self, alpha: f32) {
-    for i in 0 .. self.dim.flat_len() {
-      self.data_buf[i] = alpha;
+  pub fn set_constant(&'a mut self, c: f32) {
+    if self.stride == self.dim.least_stride() {
+      for i in 0 .. self.dim.flat_len() {
+        self.data_buf[i] = c;
+      }
+    } else {
+      unimplemented!();
     }
   }
 }
