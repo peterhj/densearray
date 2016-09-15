@@ -121,6 +121,28 @@ pub trait AsViewMut<'a, Target> {
   fn as_view_mut(&'a mut self) -> Target;
 }
 
+impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for [T] where T: Copy {
+  fn reshape(&'a self, dim: usize) -> Array1dView<'a, T> {
+    // Assume unit stride.
+    Array1dView{
+      data_buf: self,
+      dim:      dim,
+      stride:   dim.least_stride(),
+    }
+  }
+}
+
+impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for [T] where T: Copy {
+  fn reshape_mut(&'a mut self, dim: usize) -> Array1dViewMut<'a, T> {
+    // Assume unit stride.
+    Array1dViewMut{
+      data_buf: self,
+      dim:      dim,
+      stride:   dim.least_stride(),
+    }
+  }
+}
+
 impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for [T] where T: Copy {
   fn reshape(&'a self, dim: (usize, usize)) -> Array2dView<'a, T> {
     // Assume unit stride.
@@ -173,6 +195,107 @@ impl<T> Array1d<T> where T: Copy + Zero {
 }
 
 impl<T, S> Array1d<T, S> where T: Copy, S: ArrayStorage<T> {
+}
+
+impl<'a, T, S> AsView<'a, Array1dView<'a, T>> for Array1d<T, S> where T: Copy, S: ArrayStorage<T> {
+  fn as_view(&'a self) -> Array1dView<'a, T> {
+    Array1dView{
+      data_buf: self.data_buf.as_ref(),
+      dim:      self.dim,
+      stride:   self.stride,
+    }
+  }
+}
+
+impl<'a, T, S> AsViewMut<'a, Array1dViewMut<'a, T>> for Array1d<T, S> where T: Copy, S: ArrayStorage<T> {
+  fn as_view_mut(&'a mut self) -> Array1dViewMut<'a, T> {
+    Array1dViewMut{
+      data_buf: self.data_buf.as_mut(),
+      dim:      self.dim,
+      stride:   self.stride,
+    }
+  }
+}
+
+pub struct Array1dView<'a, T> where T: 'a + Copy {
+  data_buf: &'a [T],
+  dim:      usize,
+  stride:   usize,
+}
+
+impl<'a, T> Array1dView<'a, T> where T: 'a + Copy {
+  pub fn dim(&self) -> usize {
+    self.dim
+  }
+
+  pub fn stride(&self) -> usize {
+    self.stride
+  }
+
+  pub fn as_ptr(&self) -> *const T {
+    self.data_buf.as_ptr()
+  }
+}
+
+impl<'a> Array1dView<'a, f32> {
+}
+
+impl<'a, T> View<'a, usize, Array1dView<'a, T>> for Array1dView<'a, T> where T: 'a + Copy {
+  fn view(&'a self, lo: usize, hi: usize) -> Array1dView<'a, T> {
+    let new_dim = hi.diff(lo);
+    let new_offset = lo.offset(self.stride);
+    let new_offset_end = new_offset + new_dim.flat_len();
+    Array1dView{
+      data_buf: &self.data_buf[new_offset .. new_offset_end],
+      dim:      new_dim,
+      stride:   self.stride,
+    }
+  }
+}
+
+pub struct Array1dViewMut<'a, T> where T: 'a + Copy {
+  data_buf: &'a mut [T],
+  dim:      usize,
+  stride:   usize,
+}
+
+impl<'a, T> ViewMut<'a, usize, Array1dViewMut<'a, T>> for Array1dViewMut<'a, T> where T: 'a + Copy {
+  fn view_mut(&'a mut self, lo: usize, hi: usize) -> Array1dViewMut<'a, T> {
+    let new_dim = hi.diff(lo);
+    let new_offset = lo.offset(self.stride);
+    let new_offset_end = new_offset + new_dim.flat_len();
+    Array1dViewMut{
+      data_buf: &mut self.data_buf[new_offset .. new_offset_end],
+      dim:      new_dim,
+      stride:   self.stride,
+    }
+  }
+}
+
+impl<'a, T> Array1dViewMut<'a, T> where T: 'a + Copy {
+  pub fn dim(&self) -> usize {
+    self.dim
+  }
+
+  pub fn stride(&self) -> usize {
+    self.stride
+  }
+
+  pub fn as_mut_ptr(&mut self) -> *mut T {
+    self.data_buf.as_mut_ptr()
+  }
+}
+
+impl<'a> Array1dViewMut<'a, f32> {
+  pub fn set_constant(&'a mut self, c: f32) {
+    if self.stride == self.dim.least_stride() {
+      for i in 0 .. self.dim.flat_len() {
+        self.data_buf[i] = c;
+      }
+    } else {
+      unimplemented!();
+    }
+  }
 }
 
 #[derive(Clone)]
