@@ -77,6 +77,24 @@ impl ArrayIndex for (usize, usize, usize) {
   }
 }
 
+impl ArrayIndex for (usize, usize, usize, usize) {
+  fn least_stride(&self) -> Self {
+    (1, self.0, self.0 * self.1, self.0 * self.1 * self.2)
+  }
+
+  fn flat_len(&self) -> usize {
+    self.0 * self.1 * self.2 * self.3
+  }
+
+  fn offset(&self, stride: Self) -> usize {
+    stride.0 * self.0 + stride.1 * self.1 + stride.2 * self.2 + stride.3 * self.3
+  }
+
+  fn diff(&self, rhs: Self) -> Self {
+    (self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2, self.3 - rhs.3)
+  }
+}
+
 pub trait Reshape<'a, Idx, Target> where Idx: ArrayIndex {
   fn reshape(&'a self, dim: Idx) -> Target;
   fn reshape_stride(&'a self, dim: Idx, stride: Idx) -> Target { unimplemented!(); }
@@ -165,23 +183,6 @@ pub struct Array2d<T, S=Vec<T>> where T: Copy, S: ArrayStorage<T> {
   _marker:  PhantomData<T>,
 }
 
-impl<T> Array2d<T> where T: Copy + Zero {
-  pub fn zeros(dim: (usize, usize)) -> Array2d<T> {
-    let len = dim.flat_len();
-    let mut data = Vec::with_capacity(len);
-    unsafe { data.set_len(len) };
-    for i in 0 .. len {
-      data[i] = T::zero();
-    }
-    Array2d{
-      data_buf: data,
-      dim:      dim,
-      stride:   dim.least_stride(),
-      _marker:  PhantomData,
-    }
-  }
-}
-
 impl<T, S> Array2d<T, S> where T: Copy, S: ArrayStorage<T> {
   pub fn from_storage(dim: (usize, usize), data_buf: S) -> Array2d<T, S> {
     assert_eq!(dim.flat_len(), data_buf.as_ref().len());
@@ -207,6 +208,23 @@ impl<T, S> Array2d<T, S> where T: Copy, S: ArrayStorage<T> {
 
   pub fn as_mut_slice(&mut self) -> &mut [T] {
     self.data_buf.as_mut()
+  }
+}
+
+impl<T> Array2d<T> where T: Copy + Zero {
+  pub fn zeros(dim: (usize, usize)) -> Array2d<T> {
+    let len = dim.flat_len();
+    let mut data = Vec::with_capacity(len);
+    unsafe { data.set_len(len) };
+    for i in 0 .. len {
+      data[i] = T::zero();
+    }
+    Array2d{
+      data_buf: data,
+      dim:      dim,
+      stride:   dim.least_stride(),
+      _marker:  PhantomData,
+    }
   }
 }
 
@@ -236,7 +254,7 @@ pub struct Array2dView<'a, T> where T: 'a + Copy {
   stride:   (usize, usize),
 }
 
-impl<'a> Array2dView<'a, f32> {
+impl<'a, T> Array2dView<'a, T> where T: 'a + Copy {
   pub fn dim(&self) -> (usize, usize) {
     self.dim
   }
@@ -244,6 +262,13 @@ impl<'a> Array2dView<'a, f32> {
   pub fn stride(&self) -> (usize, usize) {
     self.stride
   }
+
+  pub fn as_ptr(&self) -> *const T {
+    self.data_buf.as_ptr()
+  }
+}
+
+impl<'a> Array2dView<'a, f32> {
 }
 
 impl<'a, T> View<'a, (usize, usize), Array2dView<'a, T>> for Array2dView<'a, T> where T: 'a + Copy {
@@ -278,7 +303,7 @@ impl<'a, T> ViewMut<'a, (usize, usize), Array2dViewMut<'a, T>> for Array2dViewMu
   }
 }
 
-impl<'a> Array2dViewMut<'a, f32> {
+impl<'a, T> Array2dViewMut<'a, T> where T: 'a + Copy {
   pub fn dim(&self) -> (usize, usize) {
     self.dim
   }
@@ -287,6 +312,12 @@ impl<'a> Array2dViewMut<'a, f32> {
     self.stride
   }
 
+  pub fn as_mut_ptr(&mut self) -> *mut T {
+    self.data_buf.as_mut_ptr()
+  }
+}
+
+impl<'a> Array2dViewMut<'a, f32> {
   pub fn set_constant(&'a mut self, c: f32) {
     if self.stride == self.dim.least_stride() {
       for i in 0 .. self.dim.flat_len() {
@@ -304,6 +335,23 @@ pub struct Array3d<T, S=Vec<T>> where T: Copy, S: ArrayStorage<T> {
   dim:      (usize, usize, usize),
   stride:   (usize, usize, usize),
   _marker:  PhantomData<T>,
+}
+
+impl<T> Array3d<T> where T: Copy + Zero {
+  pub fn zeros(dim: (usize, usize, usize)) -> Array3d<T> {
+    let len = dim.flat_len();
+    let mut data = Vec::with_capacity(len);
+    unsafe { data.set_len(len) };
+    for i in 0 .. len {
+      data[i] = T::zero();
+    }
+    Array3d{
+      data_buf: data,
+      dim:      dim,
+      stride:   dim.least_stride(),
+      _marker:  PhantomData,
+    }
+  }
 }
 
 impl<T, S> Array3d<T, S> where T: Copy, S: ArrayStorage<T> {
@@ -333,3 +381,121 @@ impl<T, S> Array3d<T, S> where T: Copy, S: ArrayStorage<T> {
     self.data_buf.as_mut()
   }
 }
+
+#[derive(Clone)]
+pub struct Array4d<T, S=Vec<T>> where T: Copy, S: ArrayStorage<T> {
+  data_buf: S,
+  dim:      (usize, usize, usize, usize),
+  stride:   (usize, usize, usize, usize),
+  _marker:  PhantomData<T>,
+}
+
+impl<T, S> Array4d<T, S> where T: Copy, S: ArrayStorage<T> {
+  pub fn from_storage(dim: (usize, usize, usize, usize), data_buf: S) -> Array4d<T, S> {
+    assert_eq!(dim.flat_len(), data_buf.as_ref().len());
+    Array4d{
+      data_buf: data_buf,
+      dim:      dim,
+      stride:   dim.least_stride(),
+      _marker:  PhantomData,
+    }
+  }
+
+  pub fn dim(&self) -> (usize, usize, usize, usize) {
+    self.dim
+  }
+
+  pub fn stride(&self) -> (usize, usize, usize, usize) {
+    self.stride
+  }
+
+  pub fn as_slice(&self) -> &[T] {
+    self.data_buf.as_ref()
+  }
+
+  pub fn as_mut_slice(&mut self) -> &mut [T] {
+    self.data_buf.as_mut()
+  }
+}
+
+impl<T> Array4d<T> where T: Copy + Zero {
+  pub fn zeros(dim: (usize, usize, usize, usize)) -> Array4d<T> {
+    let len = dim.flat_len();
+    let mut data = Vec::with_capacity(len);
+    unsafe { data.set_len(len) };
+    for i in 0 .. len {
+      data[i] = T::zero();
+    }
+    Array4d{
+      data_buf: data,
+      dim:      dim,
+      stride:   dim.least_stride(),
+      _marker:  PhantomData,
+    }
+  }
+}
+
+impl<'a, T, S> AsView<'a, Array4dView<'a, T>> for Array4d<T, S> where T: Copy, S: ArrayStorage<T> {
+  fn as_view(&'a self) -> Array4dView<'a, T> {
+    Array4dView{
+      data_buf: self.data_buf.as_ref(),
+      dim:      self.dim,
+      stride:   self.stride,
+    }
+  }
+}
+
+impl<'a, T, S> AsViewMut<'a, Array4dViewMut<'a, T>> for Array4d<T, S> where T: Copy, S: ArrayStorage<T> {
+  fn as_view_mut(&'a mut self) -> Array4dViewMut<'a, T> {
+    Array4dViewMut{
+      data_buf: self.data_buf.as_mut(),
+      dim:      self.dim,
+      stride:   self.stride,
+    }
+  }
+}
+
+pub struct Array4dView<'a, T> where T: 'a + Copy {
+  data_buf: &'a [T],
+  dim:      (usize, usize, usize, usize),
+  stride:   (usize, usize, usize, usize),
+}
+
+impl<'a, T> Array4dView<'a, T> where T: 'a + Copy {
+  pub fn as_ptr(&self) -> *const T {
+    self.data_buf.as_ptr()
+  }
+}
+
+pub struct Array4dViewMut<'a, T> where T: 'a + Copy {
+  data_buf: &'a mut [T],
+  dim:      (usize, usize, usize, usize),
+  stride:   (usize, usize, usize, usize),
+}
+
+impl<'a, T> Array4dViewMut<'a, T> where T: 'a + Copy {
+  pub fn dim(&self) -> (usize, usize, usize, usize) {
+    self.dim
+  }
+
+  pub fn stride(&self) -> (usize, usize, usize, usize) {
+    self.stride
+  }
+
+  pub fn as_mut_ptr(&mut self) -> *mut T {
+    self.data_buf.as_mut_ptr()
+  }
+}
+
+impl<'a> Array4dViewMut<'a, f32> {
+  pub fn set_constant(&'a mut self, c: f32) {
+    if self.stride == self.dim.least_stride() {
+      for i in 0 .. self.dim.flat_len() {
+        self.data_buf[i] = c;
+      }
+    } else {
+      unimplemented!();
+    }
+  }
+}
+
