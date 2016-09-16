@@ -2,10 +2,6 @@ use super::{Array1dView, Array1dViewMut, Array2dView, Array2dViewMut};
 
 use openblas::ffi::*;
 
-/*pub trait MatrixOps<T> {
-  fn matrix_prod(&mut self, alpha: T, a: Array2dView, b: (), beta: T); 
-}*/
-
 #[derive(Clone, Copy)]
 pub enum Transpose {
   N,
@@ -18,7 +14,7 @@ impl<'a> Array1dView<'a, f32> {
     let incx = self.stride();
     unsafe { cblas_snrm2(
         n as _,
-        self.data_buf.as_ptr(),
+        self.buf.as_ptr(),
         incx as _,
     ) }
   }
@@ -32,7 +28,7 @@ impl<'a> Array1dView<'a, f32> {
     unsafe { cblas_sdot(
         x_n as _,
         alpha,
-        self.data_buf.as_ptr(),
+        self.buf.as_ptr(),
         incx as _,
         y.as_ptr(),
         incy as _,
@@ -45,10 +41,9 @@ impl<'a> Array1dViewMut<'a, f32> {
     let n = self.dim();
     let incx = self.stride();
     let mut p = 0;
-    let mut buf = &mut self.data_buf;
     for _ in 0 .. n {
-      let x_i = buf[p];
-      buf[p] = x_i * x_i;
+      let x_i = self.buf[p];
+      self.buf[p] = x_i * x_i;
       p += incx;
     }
   }
@@ -57,10 +52,9 @@ impl<'a> Array1dViewMut<'a, f32> {
     let n = self.dim();
     let incx = self.stride();
     let mut p = 0;
-    let mut buf = &mut self.data_buf;
     for _ in 0 .. n {
-      let x_i = buf[p];
-      buf[p] = x_i.sqrt();
+      let x_i = self.buf[p];
+      self.buf[p] = x_i.sqrt();
       p += incx;
     }
   }
@@ -71,12 +65,12 @@ impl<'a> Array1dViewMut<'a, f32> {
     unsafe { cblas_sscal(
         n as _,
         alpha,
-        self.data_buf.as_mut_ptr(),
+        self.buf.as_mut_ptr(),
         incx as _,
     ) }
   }
 
-  pub fn vector_sum(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
+  pub fn vector_add(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
     let x_n = x.dim();
     let y_n = self.dim();
     assert_eq!(x_n, y_n);
@@ -85,14 +79,14 @@ impl<'a> Array1dViewMut<'a, f32> {
     unsafe { cblas_saxpy(
         x_n as _,
         alpha,
-        x.data_buf.as_ptr(),
+        x.buf.as_ptr(),
         incx as _,
-        self.data_buf.as_mut_ptr(),
+        self.buf.as_mut_ptr(),
         incy as _,
     ) };
   }
 
-  pub fn vector_quot(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
+  pub fn vector_div(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
     let x_n = x.dim();
     let y_n = self.dim();
     assert_eq!(x_n, y_n);
@@ -101,9 +95,9 @@ impl<'a> Array1dViewMut<'a, f32> {
     let mut p = 0;
     let mut q = 0;
     for _ in 0 .. x_n {
-      let x_i = x.data_buf[p];
-      let y_i = self.data_buf[q];
-      self.data_buf[q] = alpha * y_i / x_i;
+      let x_i = x.buf[p];
+      let y_i = self.buf[q];
+      self.buf[q] = alpha * y_i / x_i;
       p += incx;
       q += incy;
     }
@@ -122,7 +116,7 @@ impl<'a> Array2dView<'a, f32> {
     let mut p = 0;
     let mut q = 0;
     for _ in 0 .. y_m {
-      y.data_buf[q] = self.data_buf[p];
+      y.buf[q] = self.buf[p];
       p += a_inc + lda;
       q += incy;
     }
@@ -130,7 +124,7 @@ impl<'a> Array2dView<'a, f32> {
 }
 
 impl<'a> Array2dViewMut<'a, f32> {
-  pub fn matrix_sum(&'a mut self, alpha: f32, x: Array2dView<'a, f32>) {
+  pub fn matrix_add(&'a mut self, alpha: f32, x: Array2dView<'a, f32>) {
     let (x_m, x_n) = x.dim();
     let (y_m, y_n) = self.dim();
     assert_eq!(x_m, y_m);
@@ -141,9 +135,9 @@ impl<'a> Array2dViewMut<'a, f32> {
       unsafe { cblas_saxpy(
           x_m as _,
           alpha,
-          x.data_buf.as_ptr(),
+          x.buf.as_ptr(),
           incx as _,
-          self.data_buf.as_mut_ptr(),
+          self.buf.as_mut_ptr(),
           incy as _,
       ) };
     } else if x_m == 1 {
@@ -187,10 +181,10 @@ impl<'a> Array2dViewMut<'a, f32> {
         },
         c_m as _, c_n as _, k as _,
         alpha,
-        a.data_buf.as_ptr(), lda as _,
-        b.data_buf.as_ptr(), ldb as _,
+        a.buf.as_ptr(), lda as _,
+        b.buf.as_ptr(), ldb as _,
         beta,
-        self.data_buf.as_mut_ptr(), ldc as _,
+        self.buf.as_mut_ptr(), ldc as _,
     ) };
   }
 }
