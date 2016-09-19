@@ -6,19 +6,13 @@ use std::marker::{PhantomData};
 use std::num::{Zero};
 
 pub mod linalg;
+pub mod serial;
 
 pub trait ArrayIndex: Copy {
   fn least_stride(&self) -> Self;
   fn flat_len(&self) -> usize;
   fn offset(&self, stride: Self) -> usize;
   fn diff(&self, rhs: Self) -> Self;
-
-  /*fn major_iter(self) -> MajorIter<Self> where Self: Default {
-    MajorIter{
-      idx:          Default::default(),
-      upper_bound:  self,
-    }
-  }*/
 }
 
 impl ArrayIndex for usize {
@@ -49,7 +43,6 @@ impl ArrayIndex for (usize, usize) {
   }
 
   fn offset(&self, stride: Self) -> usize {
-    //stride.0 * (self.0 + stride.1 * self.1)
     stride.0 * self.0 + stride.1 * self.1
   }
 
@@ -68,7 +61,6 @@ impl ArrayIndex for (usize, usize, usize) {
   }
 
   fn offset(&self, stride: Self) -> usize {
-    //stride.0 * (self.0 + stride.1 * (self.1 + stride.2 * self.2))
     stride.0 * self.0 + stride.1 * self.1 + stride.2 * self.2
   }
 

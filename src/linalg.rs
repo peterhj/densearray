@@ -37,6 +37,16 @@ impl<'a> Array1dView<'a, f32> {
 }
 
 impl<'a> Array1dViewMut<'a, f32> {
+  pub fn vector_add_scalar(&'a mut self, c: f32) {
+    let n = self.dim();
+    let incx = self.stride();
+    let mut p = 0;
+    for _ in 0 .. n {
+      self.buf[p] += c;
+      p += incx;
+    }
+  }
+
   pub fn vector_square(&'a mut self) {
     let n = self.dim();
     let incx = self.stride();
@@ -55,6 +65,17 @@ impl<'a> Array1dViewMut<'a, f32> {
     for _ in 0 .. n {
       let x_i = self.buf[p];
       self.buf[p] = x_i.sqrt();
+      p += incx;
+    }
+  }
+
+  pub fn vector_recip(&'a mut self) {
+    let n = self.dim();
+    let incx = self.stride();
+    let mut p = 0;
+    for _ in 0 .. n {
+      let x_i = self.buf[p];
+      self.buf[p] = 1.0 / x_i;
       p += incx;
     }
   }
@@ -84,6 +105,23 @@ impl<'a> Array1dViewMut<'a, f32> {
         self.buf.as_mut_ptr(),
         incy as _,
     ) };
+  }
+
+  pub fn vector_elem_mult(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
+    let x_n = x.dim();
+    let y_n = self.dim();
+    assert_eq!(x_n, y_n);
+    let incx = x.stride();
+    let incy = self.stride();
+    let mut p = 0;
+    let mut q = 0;
+    for _ in 0 .. x_n {
+      let x_i = x.buf[p];
+      let y_i = self.buf[q];
+      self.buf[q] = alpha * x_i * y_i;
+      p += incx;
+      q += incy;
+    }
   }
 
   pub fn vector_div(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
