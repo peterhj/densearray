@@ -158,6 +158,48 @@ impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for [T] where 
   }
 }
 
+impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for Array1dView<'a, T> where T: Copy {
+  fn reshape(&'a self, dim: (usize, usize)) -> Array2dView<'a, T> {
+    assert!(dim == (self.dim, 1) || dim == (1, self.dim));
+    if dim.1 == 1 {
+      Array2dView{
+        buf:      self.buf,
+        dim:      dim,
+        stride:   (self.stride, self.stride * self.dim),
+      }
+    } else if dim.0 == 1 {
+      Array2dView{
+        buf:      self.buf,
+        dim:      dim,
+        stride:   (1, self.stride),
+      }
+    } else {
+      unreachable!();
+    }
+  }
+}
+
+impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for Array1dViewMut<'a, T> where T: Copy {
+  fn reshape_mut(&'a mut self, dim: (usize, usize)) -> Array2dViewMut<'a, T> {
+    assert!(dim == (self.dim, 1) || dim == (1, self.dim));
+    if dim.1 == 1 {
+      Array2dViewMut{
+        buf:      self.buf,
+        dim:      dim,
+        stride:   (self.stride, self.stride * self.dim),
+      }
+    } else if dim.0 == 1 {
+      Array2dViewMut{
+        buf:      self.buf,
+        dim:      dim,
+        stride:   (1, self.stride),
+      }
+    } else {
+      unreachable!();
+    }
+  }
+}
+
 pub trait ArrayStorage<T>: Clone + AsRef<[T]> + AsMut<[T]> {}
 
 impl<T> ArrayStorage<T> for Vec<T> where T: Copy {}
@@ -188,9 +230,23 @@ impl<T> Array1d<T> where T: Copy + Zero {
 }
 
 impl<T, S> Array1d<T, S> where T: Copy, S: Deref<Target=[T]> {
+  pub fn dim(&self) -> usize {
+    self.dim
+  }
+
+  pub fn stride(&self) -> usize {
+    self.stride
+  }
+
+  pub fn as_slice(&self) -> &[T] {
+    &*self.buf
+  }
 }
 
 impl<T, S> Array1d<T, S> where T: Copy, S: DerefMut<Target=[T]> {
+  pub fn as_mut_slice(&mut self) -> &mut [T] {
+    &mut *self.buf
+  }
 }
 
 impl<'a, T, S> AsView<'a, Array1dView<'a, T>> for Array1d<T, S> where T: Copy, S: Deref<Target=[T]> {
