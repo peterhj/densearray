@@ -4,6 +4,7 @@ extern crate openblas;
 
 use std::marker::{PhantomData};
 use std::num::{Zero};
+use std::ops::{Deref, DerefMut};
 
 pub mod linalg;
 pub mod serial;
@@ -162,7 +163,7 @@ pub trait ArrayStorage<T>: Clone + AsRef<[T]> + AsMut<[T]> {}
 impl<T> ArrayStorage<T> for Vec<T> where T: Copy {}
 
 #[derive(Clone)]
-pub struct Array1d<T, S=Vec<T>> where T: Copy, S: ArrayStorage<T> {
+pub struct Array1d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
   buf:      S,
   dim:      usize,
   stride:   usize,
@@ -186,10 +187,13 @@ impl<T> Array1d<T> where T: Copy + Zero {
   }
 }
 
-impl<T, S> Array1d<T, S> where T: Copy, S: ArrayStorage<T> {
+impl<T, S> Array1d<T, S> where T: Copy, S: Deref<Target=[T]> {
 }
 
-impl<'a, T, S> AsView<'a, Array1dView<'a, T>> for Array1d<T, S> where T: Copy, S: ArrayStorage<T> {
+impl<T, S> Array1d<T, S> where T: Copy, S: DerefMut<Target=[T]> {
+}
+
+impl<'a, T, S> AsView<'a, Array1dView<'a, T>> for Array1d<T, S> where T: Copy, S: Deref<Target=[T]> {
   fn as_view(&'a self) -> Array1dView<'a, T> {
     Array1dView{
       buf:      self.buf.as_ref(),
@@ -199,7 +203,7 @@ impl<'a, T, S> AsView<'a, Array1dView<'a, T>> for Array1d<T, S> where T: Copy, S
   }
 }
 
-impl<'a, T, S> AsViewMut<'a, Array1dViewMut<'a, T>> for Array1d<T, S> where T: Copy, S: ArrayStorage<T> {
+impl<'a, T, S> AsViewMut<'a, Array1dViewMut<'a, T>> for Array1d<T, S> where T: Copy, S: DerefMut<Target=[T]> {
   fn as_view_mut(&'a mut self) -> Array1dViewMut<'a, T> {
     Array1dViewMut{
       buf:      self.buf.as_mut(),
@@ -445,7 +449,7 @@ impl<'a> Array2dViewMut<'a, f32> {
 }
 
 #[derive(Clone)]
-pub struct Array3d<T, S=Vec<T>> where T: Copy, S: ArrayStorage<T> {
+pub struct Array3d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
   buf:      S,
   dim:      (usize, usize, usize),
   stride:   (usize, usize, usize),
@@ -469,7 +473,7 @@ impl<T> Array3d<T> where T: Copy + Zero {
   }
 }
 
-impl<T, S> Array3d<T, S> where T: Copy, S: ArrayStorage<T> {
+impl<T, S> Array3d<T, S> where T: Copy, S: Deref<Target=[T]> {
   pub fn from_storage(dim: (usize, usize, usize), buf: S) -> Array3d<T, S> {
     assert_eq!(dim.flat_len(), buf.as_ref().len());
     Array3d{
@@ -489,11 +493,13 @@ impl<T, S> Array3d<T, S> where T: Copy, S: ArrayStorage<T> {
   }
 
   pub fn as_slice(&self) -> &[T] {
-    self.buf.as_ref()
+    &*self.buf
   }
+}
 
+impl<T, S> Array3d<T, S> where T: Copy, S: DerefMut<Target=[T]> {
   pub fn as_mut_slice(&mut self) -> &mut [T] {
-    self.buf.as_mut()
+    &mut *self.buf
   }
 }
 
