@@ -117,6 +117,7 @@ pub trait AsViewMut<'a, Target> {
 impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for [T] where T: Copy {
   fn reshape(&'a self, dim: usize) -> Array1dView<'a, T> {
     // Assume unit stride.
+    assert!(self.len() >= dim);
     Array1dView{
       buf:      self,
       dim:      dim,
@@ -128,6 +129,7 @@ impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for [T] where T: Copy {
 impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for [T] where T: Copy {
   fn reshape_mut(&'a mut self, dim: usize) -> Array1dViewMut<'a, T> {
     // Assume unit stride.
+    assert!(self.len() >= dim);
     Array1dViewMut{
       buf:      self,
       dim:      dim,
@@ -139,6 +141,7 @@ impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for [T] where T: Copy {
 impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for [T] where T: Copy {
   fn reshape(&'a self, dim: (usize, usize)) -> Array2dView<'a, T> {
     // Assume unit stride.
+    assert!(self.len() >= dim.flat_len());
     Array2dView{
       buf:      self,
       dim:      dim,
@@ -150,6 +153,7 @@ impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for [T] where T: Cop
 impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for [T] where T: Copy {
   fn reshape_mut(&'a mut self, dim: (usize, usize)) -> Array2dViewMut<'a, T> {
     // Assume unit stride.
+    assert!(self.len() >= dim.flat_len());
     Array2dViewMut{
       buf:      self,
       dim:      dim,

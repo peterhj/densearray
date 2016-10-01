@@ -19,6 +19,19 @@ impl<'a> Array1dView<'a, f32> {
     ) }
   }
 
+  pub fn elem_sum(&'a self) -> f32 {
+    let x_n = self.dim();
+    let incx = self.stride();
+    let mut p = 0;
+    let mut x_sum = 0.0;
+    for _ in 0 .. x_n {
+      let x_i = self.buf[p];
+      x_sum += x_i;
+      p += incx;
+    }
+    x_sum
+  }
+
   pub fn inner_prod(&'a self, alpha: f32, y: Array1dView<'a, f32>) -> f32 {
     let x_n = self.dim();
     let y_n = y.dim();
@@ -124,7 +137,7 @@ impl<'a> Array1dViewMut<'a, f32> {
     }
   }
 
-  pub fn vector_div(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
+  pub fn elem_div(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
     let x_n = x.dim();
     let y_n = self.dim();
     assert_eq!(x_n, y_n);
