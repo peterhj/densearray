@@ -204,9 +204,53 @@ impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for Array1dVie
   }
 }
 
-pub trait ArrayStorage<T>: Clone + AsRef<[T]> + AsMut<[T]> {}
+impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for Array2dView<'a, T> where T: Copy {
+  fn reshape(&'a self, dim: usize) -> Array1dView<'a, T> {
+    assert_eq!(self.dim.least_stride(), self.stride);
+    assert_eq!(self.dim.flat_len(), dim);
+    Array1dView{
+      buf:      self.buf,
+      dim:      dim,
+      stride:   1,
+    }
+  }
+}
 
-impl<T> ArrayStorage<T> for Vec<T> where T: Copy {}
+impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for Array2dViewMut<'a, T> where T: Copy {
+  fn reshape_mut(&'a mut self, dim: usize) -> Array1dViewMut<'a, T> {
+    assert_eq!(self.dim.least_stride(), self.stride);
+    assert_eq!(self.dim.flat_len(), dim);
+    Array1dViewMut{
+      buf:      self.buf,
+      dim:      dim,
+      stride:   1,
+    }
+  }
+}
+
+impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for Array4dView<'a, T> where T: Copy {
+  fn reshape(&'a self, dim: usize) -> Array1dView<'a, T> {
+    assert_eq!(self.dim.least_stride(), self.stride);
+    assert_eq!(self.dim.flat_len(), dim);
+    Array1dView{
+      buf:      self.buf,
+      dim:      dim,
+      stride:   1,
+    }
+  }
+}
+
+impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for Array4dViewMut<'a, T> where T: Copy {
+  fn reshape_mut(&'a mut self, dim: usize) -> Array1dViewMut<'a, T> {
+    assert_eq!(self.dim.least_stride(), self.stride);
+    assert_eq!(self.dim.flat_len(), dim);
+    Array1dViewMut{
+      buf:      self.buf,
+      dim:      dim,
+      stride:   1,
+    }
+  }
+}
 
 #[derive(Clone)]
 pub struct Array1d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
@@ -355,39 +399,11 @@ impl<'a> Array1dViewMut<'a, f32> {
 }
 
 #[derive(Clone)]
-pub struct Array2d<T, S=Vec<T>> where T: Copy, S: ArrayStorage<T> {
+pub struct Array2d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
   buf:      S,
   dim:      (usize, usize),
   stride:   (usize, usize),
   _marker:  PhantomData<T>,
-}
-
-impl<T, S> Array2d<T, S> where T: Copy, S: ArrayStorage<T> {
-  pub fn from_storage(dim: (usize, usize), buf: S) -> Array2d<T, S> {
-    assert_eq!(dim.flat_len(), buf.as_ref().len());
-    Array2d{
-      buf:      buf,
-      dim:      dim,
-      stride:   dim.least_stride(),
-      _marker:  PhantomData,
-    }
-  }
-
-  pub fn dim(&self) -> (usize, usize) {
-    self.dim
-  }
-
-  pub fn stride(&self) -> (usize, usize) {
-    self.stride
-  }
-
-  pub fn as_slice(&self) -> &[T] {
-    self.buf.as_ref()
-  }
-
-  pub fn as_mut_slice(&mut self) -> &mut [T] {
-    self.buf.as_mut()
-  }
 }
 
 impl<T> Array2d<T> where T: Copy + Zero {
@@ -407,20 +423,50 @@ impl<T> Array2d<T> where T: Copy + Zero {
   }
 }
 
-impl<'a, T, S> AsView<'a, Array2dView<'a, T>> for Array2d<T, S> where T: Copy, S: ArrayStorage<T> {
+impl<T, S> Array2d<T, S> where T: Copy, S: Deref<Target=[T]> {
+  pub fn from_storage(dim: (usize, usize), buf: S) -> Array2d<T, S> {
+    assert_eq!(dim.flat_len(), buf.len());
+    Array2d{
+      buf:      buf,
+      dim:      dim,
+      stride:   dim.least_stride(),
+      _marker:  PhantomData,
+    }
+  }
+
+  pub fn dim(&self) -> (usize, usize) {
+    self.dim
+  }
+
+  pub fn stride(&self) -> (usize, usize) {
+    self.stride
+  }
+
+  pub fn as_slice(&self) -> &[T] {
+    &*self.buf
+  }
+}
+
+impl<T, S> Array2d<T, S> where T: Copy, S: DerefMut<Target=[T]> {
+  pub fn as_mut_slice(&mut self) -> &mut [T] {
+    &mut *self.buf
+  }
+}
+
+impl<'a, T, S> AsView<'a, Array2dView<'a, T>> for Array2d<T, S> where T: Copy, S: Deref<Target=[T]> {
   fn as_view(&'a self) -> Array2dView<'a, T> {
     Array2dView{
-      buf:      self.buf.as_ref(),
+      buf:      &*self.buf,
       dim:      self.dim,
       stride:   self.stride,
     }
   }
 }
 
-impl<'a, T, S> AsViewMut<'a, Array2dViewMut<'a, T>> for Array2d<T, S> where T: Copy, S: ArrayStorage<T> {
+impl<'a, T, S> AsViewMut<'a, Array2dViewMut<'a, T>> for Array2d<T, S> where T: Copy, S: DerefMut<Target=[T]> {
   fn as_view_mut(&'a mut self) -> Array2dViewMut<'a, T> {
     Array2dViewMut{
-      buf:      self.buf.as_mut(),
+      buf:      &mut *self.buf,
       dim:      self.dim,
       stride:   self.stride,
     }
@@ -564,39 +610,11 @@ impl<T, S> Array3d<T, S> where T: Copy, S: DerefMut<Target=[T]> {
 }
 
 #[derive(Clone)]
-pub struct Array4d<T, S=Vec<T>> where T: Copy, S: ArrayStorage<T> {
+pub struct Array4d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
   buf:      S,
   dim:      (usize, usize, usize, usize),
   stride:   (usize, usize, usize, usize),
   _marker:  PhantomData<T>,
-}
-
-impl<T, S> Array4d<T, S> where T: Copy, S: ArrayStorage<T> {
-  pub fn from_storage(dim: (usize, usize, usize, usize), buf: S) -> Array4d<T, S> {
-    assert_eq!(dim.flat_len(), buf.as_ref().len());
-    Array4d{
-      buf:      buf,
-      dim:      dim,
-      stride:   dim.least_stride(),
-      _marker:  PhantomData,
-    }
-  }
-
-  pub fn dim(&self) -> (usize, usize, usize, usize) {
-    self.dim
-  }
-
-  pub fn stride(&self) -> (usize, usize, usize, usize) {
-    self.stride
-  }
-
-  pub fn as_slice(&self) -> &[T] {
-    self.buf.as_ref()
-  }
-
-  pub fn as_mut_slice(&mut self) -> &mut [T] {
-    self.buf.as_mut()
-  }
 }
 
 impl<T> Array4d<T> where T: Copy + Zero {
@@ -616,20 +634,50 @@ impl<T> Array4d<T> where T: Copy + Zero {
   }
 }
 
-impl<'a, T, S> AsView<'a, Array4dView<'a, T>> for Array4d<T, S> where T: Copy, S: ArrayStorage<T> {
+impl<T, S> Array4d<T, S> where T: Copy, S: Deref<Target=[T]> {
+  pub fn from_storage(dim: (usize, usize, usize, usize), buf: S) -> Array4d<T, S> {
+    assert_eq!(dim.flat_len(), buf.as_ref().len());
+    Array4d{
+      buf:      buf,
+      dim:      dim,
+      stride:   dim.least_stride(),
+      _marker:  PhantomData,
+    }
+  }
+
+  pub fn dim(&self) -> (usize, usize, usize, usize) {
+    self.dim
+  }
+
+  pub fn stride(&self) -> (usize, usize, usize, usize) {
+    self.stride
+  }
+
+  pub fn as_slice(&self) -> &[T] {
+    &*self.buf
+  }
+}
+
+impl<T, S> Array4d<T, S> where T: Copy, S: DerefMut<Target=[T]> {
+  pub fn as_mut_slice(&mut self) -> &mut [T] {
+    &mut *self.buf
+  }
+}
+
+impl<'a, T, S> AsView<'a, Array4dView<'a, T>> for Array4d<T, S> where T: Copy, S: Deref<Target=[T]> {
   fn as_view(&'a self) -> Array4dView<'a, T> {
     Array4dView{
-      buf:      self.buf.as_ref(),
+      buf:      &*self.buf,
       dim:      self.dim,
       stride:   self.stride,
     }
   }
 }
 
-impl<'a, T, S> AsViewMut<'a, Array4dViewMut<'a, T>> for Array4d<T, S> where T: Copy, S: ArrayStorage<T> {
+impl<'a, T, S> AsViewMut<'a, Array4dViewMut<'a, T>> for Array4d<T, S> where T: Copy, S: DerefMut<Target=[T]> {
   fn as_view_mut(&'a mut self) -> Array4dViewMut<'a, T> {
     Array4dViewMut{
-      buf:      self.buf.as_mut(),
+      buf:      &mut *self.buf,
       dim:      self.dim,
       stride:   self.stride,
     }
