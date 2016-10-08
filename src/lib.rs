@@ -252,6 +252,32 @@ impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for Array4dViewMut<'a, 
   }
 }
 
+impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for Array4dView<'a, T> where T: Copy {
+  fn reshape(&'a self, dim: (usize, usize)) -> Array2dView<'a, T> {
+    // FIXME(20161008): should do a stricter check, but this is barely sufficient.
+    assert_eq!(self.dim.least_stride(), self.stride);
+    assert_eq!(self.dim.flat_len(), dim.flat_len());
+    Array2dView{
+      buf:      self.buf,
+      dim:      dim,
+      stride:   dim.least_stride(),
+    }
+  }
+}
+
+impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for Array4dViewMut<'a, T> where T: Copy {
+  fn reshape_mut(&'a mut self, dim: (usize, usize)) -> Array2dViewMut<'a, T> {
+    // FIXME(20161008): should do a stricter check, but this is barely sufficient.
+    assert_eq!(self.dim.least_stride(), self.stride);
+    assert_eq!(self.dim.flat_len(), dim.flat_len());
+    Array2dViewMut{
+      buf:      self.buf,
+      dim:      dim,
+      stride:   dim.least_stride(),
+    }
+  }
+}
+
 #[derive(Clone)]
 pub struct Array1d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
   buf:      S,
@@ -262,11 +288,14 @@ pub struct Array1d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
 
 impl<T> Array1d<T> where T: Copy + Zero {
   pub fn zeros(dim: usize) -> Array1d<T> {
-    let len = dim.flat_len();
-    let mut data = Vec::with_capacity(len);
-    unsafe { data.set_len(len) };
+    //let len = dim.flat_len();
+    let mut data = Vec::with_capacity(dim);
+    /*unsafe { data.set_len(len) };
     for i in 0 .. len {
       data[i] = T::zero();
+    }*/
+    for _ in 0 .. dim {
+      data.push(T::zero());
     }
     Array1d{
       buf:      data,
@@ -388,8 +417,8 @@ impl<'a, T> Array1dViewMut<'a, T> where T: 'a + Copy {
 
 impl<'a> Array1dViewMut<'a, f32> {
   pub fn set_constant(&'a mut self, c: f32) {
-    if self.stride == self.dim.least_stride() {
-      for i in 0 .. self.dim.flat_len() {
+    if self.stride == 1 {
+      for i in 0 .. self.dim {
         self.buf[i] = c;
       }
     } else {
