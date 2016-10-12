@@ -12,7 +12,7 @@ impl<'a> Array1dView<'a, f32> {
   pub fn l2_norm(&'a self) -> f32 {
     let n = self.dim();
     let incx = self.stride();
-    unsafe { cblas_snrm2(
+    unsafe { openblas_sequential_cblas_snrm2(
         n as _,
         self.buf.as_ptr(),
         incx as _,
@@ -38,7 +38,7 @@ impl<'a> Array1dView<'a, f32> {
     assert_eq!(x_n, y_n);
     let incx = self.stride();
     let incy = y.stride();
-    unsafe { cblas_sdot(
+    unsafe { openblas_sequential_cblas_sdot(
         x_n as _,
         alpha,
         self.buf.as_ptr(),
@@ -96,7 +96,7 @@ impl<'a> Array1dViewMut<'a, f32> {
   pub fn vector_scale(&'a mut self, alpha: f32) {
     let n = self.dim();
     let incx = self.stride();
-    unsafe { cblas_sscal(
+    unsafe { openblas_sequential_cblas_sscal(
         n as _,
         alpha,
         self.buf.as_mut_ptr(),
@@ -110,7 +110,7 @@ impl<'a> Array1dViewMut<'a, f32> {
     assert_eq!(x_n, y_n);
     let incx = x.stride();
     let incy = self.stride();
-    unsafe { cblas_saxpy(
+    unsafe { openblas_sequential_cblas_saxpy(
         x_n as _,
         alpha,
         x.buf.as_ptr(),
@@ -118,6 +118,23 @@ impl<'a> Array1dViewMut<'a, f32> {
         self.buf.as_mut_ptr(),
         incy as _,
     ) };
+  }
+
+  pub fn average(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
+    let x_n = x.dim();
+    let y_n = self.dim();
+    assert_eq!(x_n, y_n);
+    let incx = x.stride();
+    let incy = self.stride();
+    let mut p = 0;
+    let mut q = 0;
+    for _ in 0 .. x_n {
+      let x_i = x.buf[p];
+      let y_i = self.buf[q];
+      self.buf[q] = alpha * (x_i - y_i);
+      p += incx;
+      q += incy;
+    }
   }
 
   pub fn vector_elem_mult(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
@@ -183,7 +200,7 @@ impl<'a> Array2dViewMut<'a, f32> {
     let (incx, ldx) = x.stride();
     let (incy, ldy) = self.stride();
     if x_n == 1 {
-      unsafe { cblas_saxpy(
+      unsafe { openblas_sequential_cblas_saxpy(
           x_m as _,
           alpha,
           x.buf.as_ptr(),
@@ -220,7 +237,7 @@ impl<'a> Array2dViewMut<'a, f32> {
     assert_eq!(1, a_inc);
     assert_eq!(1, b_inc);
     assert_eq!(1, c_inc);
-    unsafe { cblas_sgemm(
+    unsafe { openblas_sequential_cblas_sgemm(
         CblasOrder::ColMajor,
         match a_trans {
           Transpose::N => CblasTranspose::NoTrans,
