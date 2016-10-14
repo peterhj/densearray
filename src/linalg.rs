@@ -50,7 +50,7 @@ impl<'a> Array1dView<'a, f32> {
 }
 
 impl<'a> Array1dViewMut<'a, f32> {
-  pub fn vector_add_scalar(&'a mut self, c: f32) {
+  pub fn add_scalar(&'a mut self, c: f32) {
     let n = self.dim();
     let incx = self.stride();
     let mut p = 0;
@@ -60,7 +60,11 @@ impl<'a> Array1dViewMut<'a, f32> {
     }
   }
 
-  pub fn vector_square(&'a mut self) {
+  pub fn vector_add_scalar(&'a mut self, c: f32) {
+    self.add_scalar(c);
+  }
+
+  pub fn square(&'a mut self) {
     let n = self.dim();
     let incx = self.stride();
     let mut p = 0;
@@ -71,7 +75,11 @@ impl<'a> Array1dViewMut<'a, f32> {
     }
   }
 
-  pub fn vector_sqrt(&'a mut self) {
+  pub fn vector_square(&'a mut self) {
+    self.square();
+  }
+
+  pub fn sqrt(&'a mut self) {
     let n = self.dim();
     let incx = self.stride();
     let mut p = 0;
@@ -82,7 +90,11 @@ impl<'a> Array1dViewMut<'a, f32> {
     }
   }
 
-  pub fn vector_recip(&'a mut self) {
+  pub fn vector_sqrt(&'a mut self) {
+    self.sqrt();
+  }
+
+  pub fn reciprocal(&'a mut self) {
     let n = self.dim();
     let incx = self.stride();
     let mut p = 0;
@@ -93,7 +105,11 @@ impl<'a> Array1dViewMut<'a, f32> {
     }
   }
 
-  pub fn vector_scale(&'a mut self, alpha: f32) {
+  pub fn vector_recip(&'a mut self) {
+    self.reciprocal();
+  }
+
+  pub fn scale(&'a mut self, alpha: f32) {
     let n = self.dim();
     let incx = self.stride();
     unsafe { openblas_sequential_cblas_sscal(
@@ -104,7 +120,11 @@ impl<'a> Array1dViewMut<'a, f32> {
     ) }
   }
 
-  pub fn vector_add(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
+  pub fn vector_scale(&'a mut self, alpha: f32) {
+    self.scale(alpha);
+  }
+
+  pub fn add(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
     let x_n = x.dim();
     let y_n = self.dim();
     assert_eq!(x_n, y_n);
@@ -118,6 +138,10 @@ impl<'a> Array1dViewMut<'a, f32> {
         self.buf.as_mut_ptr(),
         incy as _,
     ) };
+  }
+
+  pub fn vector_add(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
+    self.add(alpha, x);
   }
 
   pub fn average(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
@@ -137,7 +161,7 @@ impl<'a> Array1dViewMut<'a, f32> {
     }
   }
 
-  pub fn vector_elem_mult(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
+  pub fn elem_mult(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
     let x_n = x.dim();
     let y_n = self.dim();
     assert_eq!(x_n, y_n);
@@ -152,6 +176,10 @@ impl<'a> Array1dViewMut<'a, f32> {
       p += incx;
       q += incy;
     }
+  }
+
+  pub fn vector_elem_mult(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
+    self.elem_mult(alpha, x);
   }
 
   pub fn elem_div(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {

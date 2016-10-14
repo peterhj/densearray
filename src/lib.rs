@@ -288,15 +288,8 @@ pub struct Array1d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
 
 impl<T> Array1d<T> where T: Copy + Zero {
   pub fn zeros(dim: usize) -> Array1d<T> {
-    //let len = dim.flat_len();
     let mut data = Vec::with_capacity(dim);
-    /*unsafe { data.set_len(len) };
-    for i in 0 .. len {
-      data[i] = T::zero();
-    }*/
-    for _ in 0 .. dim {
-      data.push(T::zero());
-    }
+    data.resize(dim, T::zero());
     Array1d{
       buf:      data,
       dim:      dim,
