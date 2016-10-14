@@ -7,6 +7,7 @@ use std::num::{Zero};
 use std::ops::{Deref, DerefMut};
 
 pub mod linalg;
+pub mod prelude;
 pub mod serial;
 
 pub trait ArrayIndex: Copy {
@@ -89,21 +90,21 @@ impl ArrayIndex for (usize, usize, usize, usize) {
 }
 
 pub trait Reshape<'a, Idx, Target> where Idx: ArrayIndex {
-  fn reshape(&'a self, dim: Idx) -> Target;
-  fn reshape_stride(&'a self, dim: Idx, stride: Idx) -> Target { unimplemented!(); }
+  fn reshape(self, dim: Idx) -> Target;
+  //fn reshape_stride(self, dim: Idx, stride: Idx) -> Target { unimplemented!(); }
 }
 
 pub trait ReshapeMut<'a, Idx, Target> where Idx: ArrayIndex {
-  fn reshape_mut(&'a mut self, dim: Idx) -> Target;
-  fn reshape_mut_stride(&'a mut self, dim: Idx, stride: Idx) -> Target { unimplemented!(); }
+  fn reshape_mut(self, dim: Idx) -> Target;
+  //fn reshape_mut_stride(self, dim: Idx, stride: Idx) -> Target { unimplemented!(); }
 }
 
 pub trait View<'a, Idx, Target> where Idx: ArrayIndex {
-  fn view(&'a self, lo: Idx, hi: Idx) -> Target;
+  fn view(self, lo: Idx, hi: Idx) -> Target;
 }
 
 pub trait ViewMut<'a, Idx, Target> where Idx: ArrayIndex {
-  fn view_mut(&'a mut self, lo: Idx, hi: Idx) -> Target;
+  fn view_mut(self, lo: Idx, hi: Idx) -> Target;
 }
 
 pub trait AsView<'a, Target> {
@@ -114,8 +115,8 @@ pub trait AsViewMut<'a, Target> {
   fn as_view_mut(&'a mut self) -> Target;
 }
 
-impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for [T] where T: Copy {
-  fn reshape(&'a self, dim: usize) -> Array1dView<'a, T> {
+impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for &'a [T] where T: Copy {
+  fn reshape(self, dim: usize) -> Array1dView<'a, T> {
     // Assume unit stride.
     assert!(self.len() >= dim);
     Array1dView{
@@ -126,8 +127,8 @@ impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for [T] where T: Copy {
   }
 }
 
-impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for [T] where T: Copy {
-  fn reshape_mut(&'a mut self, dim: usize) -> Array1dViewMut<'a, T> {
+impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for &'a mut [T] where T: Copy {
+  fn reshape_mut(self, dim: usize) -> Array1dViewMut<'a, T> {
     // Assume unit stride.
     assert!(self.len() >= dim);
     Array1dViewMut{
@@ -138,8 +139,8 @@ impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for [T] where T: Copy {
   }
 }
 
-impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for [T] where T: Copy {
-  fn reshape(&'a self, dim: (usize, usize)) -> Array2dView<'a, T> {
+impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for &'a [T] where T: Copy {
+  fn reshape(self, dim: (usize, usize)) -> Array2dView<'a, T> {
     // Assume unit stride.
     assert!(self.len() >= dim.flat_len());
     Array2dView{
@@ -150,8 +151,8 @@ impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for [T] where T: Cop
   }
 }
 
-impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for [T] where T: Copy {
-  fn reshape_mut(&'a mut self, dim: (usize, usize)) -> Array2dViewMut<'a, T> {
+impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for &'a mut [T] where T: Copy {
+  fn reshape_mut(self, dim: (usize, usize)) -> Array2dViewMut<'a, T> {
     // Assume unit stride.
     assert!(self.len() >= dim.flat_len());
     Array2dViewMut{
@@ -163,7 +164,7 @@ impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for [T] where 
 }
 
 impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for Array1dView<'a, T> where T: Copy {
-  fn reshape(&'a self, dim: (usize, usize)) -> Array2dView<'a, T> {
+  fn reshape(self, dim: (usize, usize)) -> Array2dView<'a, T> {
     assert!(dim == (self.dim, 1) || dim == (1, self.dim));
     if dim.1 == 1 {
       Array2dView{
@@ -184,7 +185,7 @@ impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for Array1dView<'a, 
 }
 
 impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for Array1dViewMut<'a, T> where T: Copy {
-  fn reshape_mut(&'a mut self, dim: (usize, usize)) -> Array2dViewMut<'a, T> {
+  fn reshape_mut(self, dim: (usize, usize)) -> Array2dViewMut<'a, T> {
     assert!(dim == (self.dim, 1) || dim == (1, self.dim));
     if dim.1 == 1 {
       Array2dViewMut{
@@ -205,7 +206,7 @@ impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for Array1dVie
 }
 
 impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for Array2dView<'a, T> where T: Copy {
-  fn reshape(&'a self, dim: usize) -> Array1dView<'a, T> {
+  fn reshape(self, dim: usize) -> Array1dView<'a, T> {
     assert_eq!(self.dim.least_stride(), self.stride);
     assert_eq!(self.dim.flat_len(), dim);
     Array1dView{
@@ -217,7 +218,7 @@ impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for Array2dView<'a, T> where 
 }
 
 impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for Array2dViewMut<'a, T> where T: Copy {
-  fn reshape_mut(&'a mut self, dim: usize) -> Array1dViewMut<'a, T> {
+  fn reshape_mut(self, dim: usize) -> Array1dViewMut<'a, T> {
     assert_eq!(self.dim.least_stride(), self.stride);
     assert_eq!(self.dim.flat_len(), dim);
     Array1dViewMut{
@@ -229,7 +230,7 @@ impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for Array2dViewMut<'a, 
 }
 
 impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for Array4dView<'a, T> where T: Copy {
-  fn reshape(&'a self, dim: usize) -> Array1dView<'a, T> {
+  fn reshape(self, dim: usize) -> Array1dView<'a, T> {
     assert_eq!(self.dim.least_stride(), self.stride);
     assert_eq!(self.dim.flat_len(), dim);
     Array1dView{
@@ -241,7 +242,7 @@ impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for Array4dView<'a, T> where 
 }
 
 impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for Array4dViewMut<'a, T> where T: Copy {
-  fn reshape_mut(&'a mut self, dim: usize) -> Array1dViewMut<'a, T> {
+  fn reshape_mut(self, dim: usize) -> Array1dViewMut<'a, T> {
     assert_eq!(self.dim.least_stride(), self.stride);
     assert_eq!(self.dim.flat_len(), dim);
     Array1dViewMut{
@@ -253,7 +254,7 @@ impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for Array4dViewMut<'a, 
 }
 
 impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for Array4dView<'a, T> where T: Copy {
-  fn reshape(&'a self, dim: (usize, usize)) -> Array2dView<'a, T> {
+  fn reshape(self, dim: (usize, usize)) -> Array2dView<'a, T> {
     // FIXME(20161008): should do a stricter check, but this is barely sufficient.
     assert_eq!(self.dim.least_stride(), self.stride);
     assert_eq!(self.dim.flat_len(), dim.flat_len());
@@ -266,7 +267,7 @@ impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for Array4dView<'a, 
 }
 
 impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for Array4dViewMut<'a, T> where T: Copy {
-  fn reshape_mut(&'a mut self, dim: (usize, usize)) -> Array2dViewMut<'a, T> {
+  fn reshape_mut(self, dim: (usize, usize)) -> Array2dViewMut<'a, T> {
     // FIXME(20161008): should do a stricter check, but this is barely sufficient.
     assert_eq!(self.dim.least_stride(), self.stride);
     assert_eq!(self.dim.flat_len(), dim.flat_len());
@@ -363,7 +364,7 @@ impl<'a> Array1dView<'a, f32> {
 }
 
 impl<'a, T> View<'a, usize, Array1dView<'a, T>> for Array1dView<'a, T> where T: 'a + Copy {
-  fn view(&'a self, lo: usize, hi: usize) -> Array1dView<'a, T> {
+  fn view(self, lo: usize, hi: usize) -> Array1dView<'a, T> {
     let new_dim = hi.diff(lo);
     let new_offset = lo.offset(self.stride);
     let new_offset_end = new_offset + new_dim.flat_len();
@@ -382,7 +383,7 @@ pub struct Array1dViewMut<'a, T> where T: 'a + Copy {
 }
 
 impl<'a, T> ViewMut<'a, usize, Array1dViewMut<'a, T>> for Array1dViewMut<'a, T> where T: 'a + Copy {
-  fn view_mut(&'a mut self, lo: usize, hi: usize) -> Array1dViewMut<'a, T> {
+  fn view_mut(self, lo: usize, hi: usize) -> Array1dViewMut<'a, T> {
     let new_dim = hi.diff(lo);
     let new_offset = lo.offset(self.stride);
     let new_offset_end = new_offset + new_dim.flat_len();
@@ -519,7 +520,7 @@ impl<'a> Array2dView<'a, f32> {
 }
 
 impl<'a, T> View<'a, (usize, usize), Array2dView<'a, T>> for Array2dView<'a, T> where T: 'a + Copy {
-  fn view(&'a self, lo: (usize, usize), hi: (usize, usize)) -> Array2dView<'a, T> {
+  fn view(self, lo: (usize, usize), hi: (usize, usize)) -> Array2dView<'a, T> {
     let new_dim = hi.diff(lo);
     let new_offset = lo.offset(self.stride);
     let new_offset_end = new_offset + new_dim.flat_len();
@@ -538,7 +539,7 @@ pub struct Array2dViewMut<'a, T> where T: 'a + Copy {
 }
 
 impl<'a, T> ViewMut<'a, (usize, usize), Array2dViewMut<'a, T>> for Array2dViewMut<'a, T> where T: 'a + Copy {
-  fn view_mut(&'a mut self, lo: (usize, usize), hi: (usize, usize)) -> Array2dViewMut<'a, T> {
+  fn view_mut(self, lo: (usize, usize), hi: (usize, usize)) -> Array2dViewMut<'a, T> {
     let new_dim = hi.diff(lo);
     let new_offset = lo.offset(self.stride);
     let new_offset_end = new_offset + new_dim.flat_len();
