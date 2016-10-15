@@ -109,6 +109,17 @@ impl<'a> Array1dViewMut<'a, f32> {
     self.reciprocal();
   }
 
+  pub fn exp(&mut self) {
+    let n = self.dim();
+    let incx = self.stride();
+    let mut p = 0;
+    for _ in 0 .. n {
+      let x_i = self.buf[p];
+      self.buf[p] = x_i.exp();
+      p += incx;
+    }
+  }
+
   pub fn scale(&'a mut self, alpha: f32) {
     let n = self.dim();
     let incx = self.stride();
