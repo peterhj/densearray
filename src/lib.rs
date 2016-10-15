@@ -714,6 +714,14 @@ pub struct Array4dView<'a, T> where T: 'a + Copy {
 }
 
 impl<'a, T> Array4dView<'a, T> where T: 'a + Copy {
+  pub fn dim(&self) -> (usize, usize, usize, usize) {
+    self.dim
+  }
+
+  pub fn stride(&self) -> (usize, usize, usize, usize) {
+    self.stride
+  }
+
   pub fn as_ptr(&self) -> *const T {
     self.buf.as_ptr()
   }
@@ -750,4 +758,3 @@ impl<'a> Array4dViewMut<'a, f32> {
     }
   }
 }
-
