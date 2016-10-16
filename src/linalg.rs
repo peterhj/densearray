@@ -166,7 +166,7 @@ impl<'a> Array1dViewMut<'a, f32> {
     for _ in 0 .. x_n {
       let x_i = x.buf[p];
       let y_i = self.buf[q];
-      self.buf[q] = alpha * (x_i - y_i);
+      self.buf[q] = y_i + alpha * (x_i - y_i);
       p += incx;
       q += incy;
     }
