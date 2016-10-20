@@ -1,5 +1,6 @@
 #![feature(zero_one)]
 
+extern crate byteorder;
 extern crate openblas;
 
 use std::marker::{PhantomData};
@@ -611,6 +612,10 @@ impl<T, S> Array3d<T, S> where T: Copy, S: Deref<Target=[T]> {
       stride:   dim.least_stride(),
       _marker:  PhantomData,
     }
+  }
+
+  pub fn into_storage(self) -> S {
+    self.buf
   }
 
   pub fn dim(&self) -> (usize, usize, usize) {

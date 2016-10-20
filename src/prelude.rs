@@ -6,3 +6,4 @@ pub use super::{
   Array4d, Array4dView, Array4dViewMut,
 };
 pub use linalg::*;
+pub use serial::{NdArrayDtype, NdArrayDeserialize, NdArraySerialize};
