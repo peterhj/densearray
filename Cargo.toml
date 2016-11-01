@@ -8,5 +8,6 @@ name = "densearray"
 path = "src/lib.rs"
 
 [dependencies]
+densearray_kernels = { path = "kernels" }
 byteorder = "*"
 openblas = { path = "../libopenblas" }

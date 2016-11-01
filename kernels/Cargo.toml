@@ -1,0 +1,15 @@
+[package]
+name = "densearray_kernels"
+version = "0.0.1"
+authors = ["Peter Jin <peterhaijin@gmail.com>"]
+build = "build.rs"
+
+[lib]
+name = "densearray_kernels"
+path = "lib.rs"
+
+[build-dependencies]
+gcc = "*"
+
+[dependencies]
+libc = "*"

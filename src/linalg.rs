@@ -1,4 +1,5 @@
 use super::{Array1dView, Array1dViewMut, Array2dView, Array2dViewMut};
+use kernels::*;
 
 use openblas::ffi::*;
 
@@ -51,12 +52,21 @@ impl<'a> Array1dView<'a, f32> {
 
 impl<'a> Array1dViewMut<'a, f32> {
   pub fn add_scalar(&'a mut self, c: f32) {
-    let n = self.dim();
+    /*let n = self.dim();
     let incx = self.stride();
     let mut p = 0;
     for _ in 0 .. n {
       self.buf[p] += c;
       p += incx;
+    }*/
+    if self.stride() == 1 {
+      unsafe { densearray_add_scalar_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          c,
+      ) };
+    } else {
+      unimplemented!();
     }
   }
 
@@ -64,14 +74,58 @@ impl<'a> Array1dViewMut<'a, f32> {
     self.add_scalar(c);
   }
 
+  pub fn scale(&'a mut self, alpha: f32) {
+    /*let n = self.dim();
+    let incx = self.stride();
+    unsafe { openblas_sequential_cblas_sscal(
+        n as _,
+        alpha,
+        self.buf.as_mut_ptr(),
+        incx as _,
+    ) }*/
+    if self.stride() == 1 {
+      unsafe { densearray_scale_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          alpha,
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
+  pub fn vector_scale(&'a mut self, alpha: f32) {
+    self.scale(alpha);
+  }
+
+  pub fn div_scalar(&'a mut self, c: f32) {
+    if self.stride() == 1 {
+      unsafe { densearray_div_scalar_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          c,
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
   pub fn square(&'a mut self) {
-    let n = self.dim();
+    /*let n = self.dim();
     let incx = self.stride();
     let mut p = 0;
     for _ in 0 .. n {
       let x_i = self.buf[p];
       self.buf[p] = x_i * x_i;
       p += incx;
+    }*/
+    if self.stride() == 1 {
+      unsafe { densearray_square_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+      ) };
+    } else {
+      unimplemented!();
     }
   }
 
@@ -80,13 +134,21 @@ impl<'a> Array1dViewMut<'a, f32> {
   }
 
   pub fn sqrt(&'a mut self) {
-    let n = self.dim();
+    /*let n = self.dim();
     let incx = self.stride();
     let mut p = 0;
     for _ in 0 .. n {
       let x_i = self.buf[p];
       self.buf[p] = x_i.sqrt();
       p += incx;
+    }*/
+    if self.stride() == 1 {
+      unsafe { densearray_sqrt_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+      ) };
+    } else {
+      unimplemented!();
     }
   }
 
@@ -95,13 +157,21 @@ impl<'a> Array1dViewMut<'a, f32> {
   }
 
   pub fn reciprocal(&'a mut self) {
-    let n = self.dim();
+    /*let n = self.dim();
     let incx = self.stride();
     let mut p = 0;
     for _ in 0 .. n {
       let x_i = self.buf[p];
       self.buf[p] = 1.0 / x_i;
       p += incx;
+    }*/
+    if self.stride() == 1 {
+      unsafe { densearray_reciprocal_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+      ) };
+    } else {
+      unimplemented!();
     }
   }
 
@@ -120,23 +190,8 @@ impl<'a> Array1dViewMut<'a, f32> {
     }
   }
 
-  pub fn scale(&'a mut self, alpha: f32) {
-    let n = self.dim();
-    let incx = self.stride();
-    unsafe { openblas_sequential_cblas_sscal(
-        n as _,
-        alpha,
-        self.buf.as_mut_ptr(),
-        incx as _,
-    ) }
-  }
-
-  pub fn vector_scale(&'a mut self, alpha: f32) {
-    self.scale(alpha);
-  }
-
   pub fn add(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
-    let x_n = x.dim();
+    /*let x_n = x.dim();
     let y_n = self.dim();
     assert_eq!(x_n, y_n);
     let incx = x.stride();
@@ -148,7 +203,17 @@ impl<'a> Array1dViewMut<'a, f32> {
         incx as _,
         self.buf.as_mut_ptr(),
         incy as _,
-    ) };
+    ) };*/
+    if self.stride() == 1 {
+      unsafe { densearray_vector_add_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          x.as_ptr(),
+          alpha,
+      ) };
+    } else {
+      unimplemented!();
+    }
   }
 
   pub fn vector_add(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
@@ -156,7 +221,7 @@ impl<'a> Array1dViewMut<'a, f32> {
   }
 
   pub fn average(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
-    let x_n = x.dim();
+    /*let x_n = x.dim();
     let y_n = self.dim();
     assert_eq!(x_n, y_n);
     let incx = x.stride();
@@ -169,11 +234,21 @@ impl<'a> Array1dViewMut<'a, f32> {
       self.buf[q] = y_i + alpha * (x_i - y_i);
       p += incx;
       q += incy;
+    }*/
+    if self.stride() == 1 {
+      unsafe { densearray_vector_average_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          x.as_ptr(),
+          alpha,
+      ) };
+    } else {
+      unimplemented!();
     }
   }
 
-  pub fn elem_mult(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
-    let x_n = x.dim();
+  pub fn elem_mult(&'a mut self, /*alpha: f32,*/ x: Array1dView<'a, f32>) {
+    /*let x_n = x.dim();
     let y_n = self.dim();
     assert_eq!(x_n, y_n);
     let incx = x.stride();
@@ -186,27 +261,43 @@ impl<'a> Array1dViewMut<'a, f32> {
       self.buf[q] = alpha * x_i * y_i;
       p += incx;
       q += incy;
+    }*/
+    if self.stride() == 1 {
+      unsafe { densearray_elem_mult_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          x.as_ptr(),
+      ) };
+    } else {
+      unimplemented!();
     }
   }
 
-  pub fn vector_elem_mult(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
-    self.elem_mult(alpha, x);
+  pub fn vector_elem_mult(&'a mut self, x: Array1dView<'a, f32>) {
+    self.elem_mult(x);
   }
 
-  pub fn elem_div(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
-    let x_n = x.dim();
-    let y_n = self.dim();
-    assert_eq!(x_n, y_n);
-    let incx = x.stride();
-    let incy = self.stride();
-    let mut p = 0;
-    let mut q = 0;
-    for _ in 0 .. x_n {
-      let x_i = x.buf[p];
-      let y_i = self.buf[q];
-      self.buf[q] = alpha * y_i / x_i;
-      p += incx;
-      q += incy;
+  pub fn elem_div(&'a mut self, x: Array1dView<'a, f32>) {
+    if self.stride() == 1 {
+      unsafe { densearray_elem_div_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          x.as_ptr(),
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
+  pub fn elem_ldiv(&'a mut self, x: Array1dView<'a, f32>) {
+    if self.stride() == 1 {
+      unsafe { densearray_elem_ldiv_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          x.as_ptr(),
+      ) };
+    } else {
+      unimplemented!();
     }
   }
 }

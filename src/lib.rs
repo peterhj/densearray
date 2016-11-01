@@ -1,5 +1,7 @@
 #![feature(zero_one)]
 
+extern crate densearray_kernels;
+
 extern crate byteorder;
 extern crate openblas;
 
@@ -7,6 +9,7 @@ use std::marker::{PhantomData};
 use std::num::{Zero};
 use std::ops::{Deref, DerefMut};
 
+pub mod kernels;
 pub mod linalg;
 pub mod prelude;
 pub mod serial;
