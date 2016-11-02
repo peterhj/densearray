@@ -167,6 +167,30 @@ impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for &'a mut [T
   }
 }
 
+impl<'a, T> Reshape<'a, (usize, usize, usize, usize), Array4dView<'a, T>> for &'a [T] where T: Copy {
+  fn reshape(self, dim: (usize, usize, usize, usize)) -> Array4dView<'a, T> {
+    // Assume unit stride.
+    assert!(self.len() >= dim.flat_len());
+    Array4dView{
+      buf:      self,
+      dim:      dim,
+      stride:   dim.least_stride(),
+    }
+  }
+}
+
+impl<'a, T> ReshapeMut<'a, (usize, usize, usize, usize), Array4dViewMut<'a, T>> for &'a mut [T] where T: Copy {
+  fn reshape_mut(self, dim: (usize, usize, usize, usize)) -> Array4dViewMut<'a, T> {
+    // Assume unit stride.
+    assert!(self.len() >= dim.flat_len());
+    Array4dViewMut{
+      buf:      self,
+      dim:      dim,
+      stride:   dim.least_stride(),
+    }
+  }
+}
+
 impl<'a, T> Reshape<'a, (usize, usize), Array2dView<'a, T>> for Array1dView<'a, T> where T: Copy {
   fn reshape(self, dim: (usize, usize)) -> Array2dView<'a, T> {
     assert!(dim == (self.dim, 1) || dim == (1, self.dim));
