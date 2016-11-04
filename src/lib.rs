@@ -122,16 +122,29 @@ pub trait ViewMut<'a, Idx, Target> where Idx: ArrayIndex {
   fn view_mut(self, lo: Idx, hi: Idx) -> Target;
 }
 
-pub trait CastBytes<'a, Target: ?Sized> {
-  fn cast_bytes(self) -> Target;
+pub trait AliasBytes<'a, Target: ?Sized> {
+  fn alias_bytes(self) -> Target;
 }
 
-pub trait CastBytesMut<'a, Target: ?Sized> {
-  fn cast_bytes_mut(self) -> Target;
+pub trait AliasBytesMut<'a, Target: ?Sized> {
+  fn alias_bytes_mut(self) -> Target;
 }
 
-impl<'a> CastBytes<'a, &'a [f32]> for &'a [u8] {
-  fn cast_bytes(self) -> &'a [f32] {
+// FIXME(20161104): this should be removed in favor of impl functions.
+pub trait CastFrom<'a, Target: ?Sized> {
+  fn cast_from(self, target: Target);
+}
+
+impl<'a> CastFrom<'a, &'a [u8]> for &'a mut [f32] {
+  fn cast_from(self, xs: &'a [u8]) {
+    for (x, y) in xs.iter().zip(self.iter_mut()) {
+      *y = *x as f32;
+    }
+  }
+}
+
+impl<'a> AliasBytes<'a, &'a [f32]> for &'a [u8] {
+  fn alias_bytes(self) -> &'a [f32] {
     let bytes_sz = self.len();
     let new_sz = bytes_sz / size_of::<f32>();
     assert_eq!(0, bytes_sz % size_of::<f32>());
@@ -139,8 +152,8 @@ impl<'a> CastBytes<'a, &'a [f32]> for &'a [u8] {
   }
 }
 
-impl<'a> CastBytesMut<'a, &'a mut [f32]> for &'a mut [u8] {
-  fn cast_bytes_mut(self) -> &'a mut [f32] {
+impl<'a> AliasBytesMut<'a, &'a mut [f32]> for &'a mut [u8] {
+  fn alias_bytes_mut(self) -> &'a mut [f32] {
     let bytes_sz = self.len();
     let new_sz = bytes_sz / size_of::<f32>();
     assert_eq!(0, bytes_sz % size_of::<f32>());
