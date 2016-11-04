@@ -9,8 +9,9 @@ fn main() {
     .compiler(&cc)
     .opt_level(3)
     .pic(true)
+    .flag("-std=gnu99")
     .flag("-march=native")
-    .flag("--std=gnu99")
+    .flag("-fno-strict-aliasing")
     .file("vector.c")
     .compile("libdensearray_kernels.a");
   println!("cargo:rustc-link-search=native={}", out_dir);

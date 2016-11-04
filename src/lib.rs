@@ -6,11 +6,14 @@ extern crate byteorder;
 extern crate openblas;
 
 use std::marker::{PhantomData};
+use std::mem::{size_of};
 use std::num::{Zero};
 use std::ops::{Deref, DerefMut};
+use std::slice::{from_raw_parts, from_raw_parts_mut};
 
 pub mod kernels;
 pub mod linalg;
+pub mod parallel_linalg;
 pub mod prelude;
 pub mod serial;
 
@@ -103,6 +106,14 @@ pub trait ReshapeMut<'a, Idx, Target> where Idx: ArrayIndex {
   //fn reshape_mut_stride(self, dim: Idx, stride: Idx) -> Target { unimplemented!(); }
 }
 
+pub trait AsView<'a, Target> {
+  fn as_view(&'a self) -> Target;
+}
+
+pub trait AsViewMut<'a, Target> {
+  fn as_view_mut(&'a mut self) -> Target;
+}
+
 pub trait View<'a, Idx, Target> where Idx: ArrayIndex {
   fn view(self, lo: Idx, hi: Idx) -> Target;
 }
@@ -111,12 +122,30 @@ pub trait ViewMut<'a, Idx, Target> where Idx: ArrayIndex {
   fn view_mut(self, lo: Idx, hi: Idx) -> Target;
 }
 
-pub trait AsView<'a, Target> {
-  fn as_view(&'a self) -> Target;
+pub trait CastBytes<'a, Target: ?Sized> {
+  fn cast_bytes(self) -> Target;
 }
 
-pub trait AsViewMut<'a, Target> {
-  fn as_view_mut(&'a mut self) -> Target;
+pub trait CastBytesMut<'a, Target: ?Sized> {
+  fn cast_bytes_mut(self) -> Target;
+}
+
+impl<'a> CastBytes<'a, &'a [f32]> for &'a [u8] {
+  fn cast_bytes(self) -> &'a [f32] {
+    let bytes_sz = self.len();
+    let new_sz = bytes_sz / size_of::<f32>();
+    assert_eq!(0, bytes_sz % size_of::<f32>());
+    unsafe { from_raw_parts(self.as_ptr() as *const f32, new_sz) }
+  }
+}
+
+impl<'a> CastBytesMut<'a, &'a mut [f32]> for &'a mut [u8] {
+  fn cast_bytes_mut(self) -> &'a mut [f32] {
+    let bytes_sz = self.len();
+    let new_sz = bytes_sz / size_of::<f32>();
+    assert_eq!(0, bytes_sz % size_of::<f32>());
+    unsafe { from_raw_parts_mut(self.as_mut_ptr() as *mut f32, new_sz) }
+  }
 }
 
 impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for &'a [T] where T: Copy {
