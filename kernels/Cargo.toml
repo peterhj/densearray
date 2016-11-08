@@ -3,6 +3,7 @@ name = "densearray_kernels"
 version = "0.0.1"
 authors = ["Peter Jin <peterhaijin@gmail.com>"]
 license = "BSD-2-Clause"
+description = "densearray_kernels"
 build = "build.rs"
 
 [lib]
