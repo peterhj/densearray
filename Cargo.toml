@@ -13,6 +13,6 @@ name = "densearray"
 path = "src/lib.rs"
 
 [dependencies]
-densearray_kernels = { path = "kernels" }
+densearray_kernels = { path = "kernels", version = "0.0.1" }
 byteorder = "^0.5"
 openblas_ffi = "^0.1"
