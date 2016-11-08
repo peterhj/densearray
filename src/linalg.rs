@@ -1,7 +1,7 @@
 use super::{Array1dView, Array1dViewMut, Array2dView, Array2dViewMut};
 use kernels::*;
 
-use openblas::ffi::*;
+use openblas_ffi::*;
 
 #[derive(Clone, Copy)]
 pub enum Transpose {

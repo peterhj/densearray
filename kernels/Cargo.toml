@@ -12,4 +12,4 @@ path = "lib.rs"
 gcc = "*"
 
 [dependencies]
-libc = "*"
+libc = "^0.2"

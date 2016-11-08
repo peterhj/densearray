@@ -2,7 +2,7 @@ use super::{Array1dView, Array1dViewMut, Array2dView, Array2dViewMut};
 use kernels::*;
 use linalg::{Transpose};
 
-use openblas::ffi::*;
+use openblas_ffi::*;
 
 impl<'a> Array1dView<'a, f32> {
   pub fn parallel_l2_norm(&'a self) -> f32 {

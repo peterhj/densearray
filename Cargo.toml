@@ -9,5 +9,5 @@ path = "src/lib.rs"
 
 [dependencies]
 densearray_kernels = { path = "kernels" }
-byteorder = "*"
-openblas = { path = "../libopenblas" }
+byteorder = "^0.5"
+openblas_ffi = "^0.1"

@@ -3,7 +3,7 @@
 extern crate densearray_kernels;
 
 extern crate byteorder;
-extern crate openblas;
+extern crate openblas_ffi;
 
 use std::marker::{PhantomData};
 use std::mem::{size_of};
