@@ -11,7 +11,7 @@ name = "densearray_kernels"
 path = "lib.rs"
 
 [build-dependencies]
-gcc = "*"
+gcc = "^0.3"
 
 [dependencies]
 libc = "^0.2"
