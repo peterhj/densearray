@@ -3,6 +3,9 @@
 extern crate densearray_kernels;
 
 extern crate byteorder;
+extern crate cblas_ffi;
+#[cfg(feature = "mkl_parallel")]
+extern crate mkl_ffi;
 extern crate openblas_ffi;
 
 use std::marker::{PhantomData};

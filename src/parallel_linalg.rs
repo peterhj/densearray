@@ -2,13 +2,21 @@ use super::{Array1dView, Array1dViewMut, Array2dView, Array2dViewMut};
 use kernels::*;
 use linalg::{Transpose};
 
+use cblas_ffi::*;
 use openblas_ffi::*;
 
 impl<'a> Array1dView<'a, f32> {
   pub fn parallel_l2_norm(&'a self) -> f32 {
     let n = self.dim();
     let incx = self.stride();
+    #[cfg(not(feature = "mkl_parallel"))]
     unsafe { openblas_parallel_cblas_snrm2(
+        n as _,
+        self.buf.as_ptr(),
+        incx as _,
+    ) }
+    #[cfg(feature = "mkl_parallel")]
+    unsafe { cblas_snrm2(
         n as _,
         self.buf.as_ptr(),
         incx as _,
@@ -21,7 +29,17 @@ impl<'a> Array1dView<'a, f32> {
     assert_eq!(x_n, y_n);
     let incx = self.stride();
     let incy = y.stride();
+    #[cfg(not(feature = "mkl_parallel"))]
     unsafe { openblas_parallel_cblas_sdot(
+        x_n as _,
+        alpha,
+        self.buf.as_ptr(),
+        incx as _,
+        y.as_ptr(),
+        incy as _,
+    ) }
+    #[cfg(feature = "mkl_parallel")]
+    unsafe { cblas_sdot(
         x_n as _,
         alpha,
         self.buf.as_ptr(),
@@ -55,7 +73,26 @@ impl<'a> Array2dViewMut<'a, f32> {
     assert_eq!(1, a_inc);
     assert_eq!(1, b_inc);
     assert_eq!(1, c_inc);
+    #[cfg(not(feature = "mkl_parallel"))]
     unsafe { openblas_parallel_cblas_sgemm(
+        CblasOrder::ColMajor,
+        match a_trans {
+          Transpose::N => CblasTranspose::NoTrans,
+          Transpose::T => CblasTranspose::Trans,
+        },
+        match b_trans {
+          Transpose::N => CblasTranspose::NoTrans,
+          Transpose::T => CblasTranspose::Trans,
+        },
+        c_m as _, c_n as _, k as _,
+        alpha,
+        a.buf.as_ptr(), lda as _,
+        b.buf.as_ptr(), ldb as _,
+        beta,
+        self.buf.as_mut_ptr(), ldc as _,
+    ) };
+    #[cfg(feature = "mkl_parallel")]
+    unsafe { cblas_sgemm(
         CblasOrder::ColMajor,
         match a_trans {
           Transpose::N => CblasTranspose::NoTrans,

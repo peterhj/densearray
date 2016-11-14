@@ -1,12 +1,16 @@
 [package]
 name = "densearray"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Peter Jin <peterhaijin@gmail.com>"]
 license = "BSD-2-Clause"
 description = "N-dimensional dense arrays."
 repository = "https://github.com/peterhj/libdensearray"
 keywords = ["array", "ndarray", "dense", "tensor", "algebra"]
 readme = "README.md"
+
+[features]
+default = []
+mkl_parallel = ["mkl_link/openmp"]
 
 [lib]
 name = "densearray"
@@ -15,4 +19,6 @@ path = "src/lib.rs"
 [dependencies]
 densearray_kernels = { path = "kernels", version = "0.0.1" }
 byteorder = "^0.5"
-openblas_ffi = "^0.1"
+cblas_ffi = "^0.1"
+mkl_link = { version = "^0.1", optional = true }
+openblas_ffi = { version = "^0.1"}
