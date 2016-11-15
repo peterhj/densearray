@@ -480,10 +480,8 @@ impl<'a, T> Array1dViewMut<'a, T> where T: 'a + Copy {
   pub fn as_mut_ptr(&mut self) -> *mut T {
     self.buf.as_mut_ptr()
   }
-}
 
-impl<'a> Array1dViewMut<'a, f32> {
-  pub fn set_constant(&'a mut self, c: f32) {
+  pub fn set_constant(&'a mut self, c: T) {
     if self.stride == 1 {
       for i in 0 .. self.dim {
         self.buf[i] = c;
@@ -636,10 +634,8 @@ impl<'a, T> Array2dViewMut<'a, T> where T: 'a + Copy {
   pub fn as_mut_ptr(&mut self) -> *mut T {
     self.buf.as_mut_ptr()
   }
-}
 
-impl<'a> Array2dViewMut<'a, f32> {
-  pub fn set_constant(&'a mut self, c: f32) {
+  pub fn set_constant(&'a mut self, c: T) {
     if self.stride == self.dim.least_stride() {
       for i in 0 .. self.dim.flat_len() {
         self.buf[i] = c;
@@ -822,10 +818,8 @@ impl<'a, T> Array4dViewMut<'a, T> where T: 'a + Copy {
   pub fn as_mut_ptr(&mut self) -> *mut T {
     self.buf.as_mut_ptr()
   }
-}
 
-impl<'a> Array4dViewMut<'a, f32> {
-  pub fn set_constant(&'a mut self, c: f32) {
+  pub fn set_constant(&'a mut self, c: T) {
     if self.stride == self.dim.least_stride() {
       for i in 0 .. self.dim.flat_len() {
         self.buf[i] = c;
