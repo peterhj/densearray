@@ -5,7 +5,7 @@
 extern crate byteorder;
 extern crate cblas_ffi;
 #[cfg(feature = "mkl_parallel")]
-extern crate mkl_ffi;
+extern crate mkl_link;
 extern crate openblas_ffi;
 
 extern crate libc;
