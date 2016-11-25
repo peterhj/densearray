@@ -53,13 +53,6 @@ impl<'a> Array1dView<'a, f32> {
 
 impl<'a> Array1dViewMut<'a, f32> {
   pub fn add_scalar(&'a mut self, c: f32) {
-    /*let n = self.dim();
-    let incx = self.stride();
-    let mut p = 0;
-    for _ in 0 .. n {
-      self.buf[p] += c;
-      p += incx;
-    }*/
     if self.stride() == 1 {
       unsafe { densearray_add_scalar_f32(
           self.buf.as_mut_ptr(),
@@ -76,14 +69,6 @@ impl<'a> Array1dViewMut<'a, f32> {
   }
 
   pub fn scale(&'a mut self, alpha: f32) {
-    /*let n = self.dim();
-    let incx = self.stride();
-    unsafe { openblas_sequential_cblas_sscal(
-        n as _,
-        alpha,
-        self.buf.as_mut_ptr(),
-        incx as _,
-    ) }*/
     if self.stride() == 1 {
       unsafe { densearray_scale_f32(
           self.buf.as_mut_ptr(),
@@ -112,14 +97,6 @@ impl<'a> Array1dViewMut<'a, f32> {
   }
 
   pub fn square(&'a mut self) {
-    /*let n = self.dim();
-    let incx = self.stride();
-    let mut p = 0;
-    for _ in 0 .. n {
-      let x_i = self.buf[p];
-      self.buf[p] = x_i * x_i;
-      p += incx;
-    }*/
     if self.stride() == 1 {
       unsafe { densearray_square_f32(
           self.buf.as_mut_ptr(),
@@ -135,14 +112,6 @@ impl<'a> Array1dViewMut<'a, f32> {
   }
 
   pub fn sqrt(&'a mut self) {
-    /*let n = self.dim();
-    let incx = self.stride();
-    let mut p = 0;
-    for _ in 0 .. n {
-      let x_i = self.buf[p];
-      self.buf[p] = x_i.sqrt();
-      p += incx;
-    }*/
     if self.stride() == 1 {
       unsafe { densearray_sqrt_f32(
           self.buf.as_mut_ptr(),
@@ -158,14 +127,6 @@ impl<'a> Array1dViewMut<'a, f32> {
   }
 
   pub fn reciprocal(&'a mut self) {
-    /*let n = self.dim();
-    let incx = self.stride();
-    let mut p = 0;
-    for _ in 0 .. n {
-      let x_i = self.buf[p];
-      self.buf[p] = 1.0 / x_i;
-      p += incx;
-    }*/
     if self.stride() == 1 {
       unsafe { densearray_reciprocal_f32(
           self.buf.as_mut_ptr(),
@@ -192,19 +153,6 @@ impl<'a> Array1dViewMut<'a, f32> {
   }
 
   pub fn add(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
-    /*let x_n = x.dim();
-    let y_n = self.dim();
-    assert_eq!(x_n, y_n);
-    let incx = x.stride();
-    let incy = self.stride();
-    unsafe { openblas_sequential_cblas_saxpy(
-        x_n as _,
-        alpha,
-        x.buf.as_ptr(),
-        incx as _,
-        self.buf.as_mut_ptr(),
-        incy as _,
-    ) };*/
     if self.stride() == 1 {
       unsafe { densearray_vector_add_f32(
           self.buf.as_mut_ptr(),
@@ -222,20 +170,6 @@ impl<'a> Array1dViewMut<'a, f32> {
   }
 
   pub fn average(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
-    /*let x_n = x.dim();
-    let y_n = self.dim();
-    assert_eq!(x_n, y_n);
-    let incx = x.stride();
-    let incy = self.stride();
-    let mut p = 0;
-    let mut q = 0;
-    for _ in 0 .. x_n {
-      let x_i = x.buf[p];
-      let y_i = self.buf[q];
-      self.buf[q] = y_i + alpha * (x_i - y_i);
-      p += incx;
-      q += incy;
-    }*/
     if self.stride() == 1 {
       unsafe { densearray_vector_average_f32(
           self.buf.as_mut_ptr(),
@@ -249,20 +183,6 @@ impl<'a> Array1dViewMut<'a, f32> {
   }
 
   pub fn elem_mult(&'a mut self, /*alpha: f32,*/ x: Array1dView<'a, f32>) {
-    /*let x_n = x.dim();
-    let y_n = self.dim();
-    assert_eq!(x_n, y_n);
-    let incx = x.stride();
-    let incy = self.stride();
-    let mut p = 0;
-    let mut q = 0;
-    for _ in 0 .. x_n {
-      let x_i = x.buf[p];
-      let y_i = self.buf[q];
-      self.buf[q] = alpha * x_i * y_i;
-      p += incx;
-      q += incy;
-    }*/
     if self.stride() == 1 {
       unsafe { densearray_elem_mult_f32(
           self.buf.as_mut_ptr(),

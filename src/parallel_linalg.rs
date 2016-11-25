@@ -50,6 +50,150 @@ impl<'a> Array1dView<'a, f32> {
   }
 }
 
+impl<'a> Array1dViewMut<'a, f32> {
+  pub fn parallel_add_scalar(&'a mut self, c: f32) {
+    if self.stride() == 1 {
+      unsafe { densearray_omp_add_scalar_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          c,
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
+  pub fn parallel_scale(&'a mut self, alpha: f32) {
+    if self.stride() == 1 {
+      unsafe { densearray_omp_scale_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          alpha,
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
+  pub fn parallel_div_scalar(&'a mut self, c: f32) {
+    if self.stride() == 1 {
+      unsafe { densearray_omp_div_scalar_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          c,
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
+  pub fn parallel_square(&'a mut self) {
+    if self.stride() == 1 {
+      unsafe { densearray_omp_square_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
+  pub fn parallel_sqrt(&'a mut self) {
+    if self.stride() == 1 {
+      unsafe { densearray_omp_sqrt_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
+  pub fn parallel_reciprocal(&'a mut self) {
+    if self.stride() == 1 {
+      unsafe { densearray_omp_reciprocal_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
+  pub fn parallel_exp(&mut self) {
+    let n = self.dim();
+    let incx = self.stride();
+    let mut p = 0;
+    for _ in 0 .. n {
+      let x_i = self.buf[p];
+      self.buf[p] = x_i.exp();
+      p += incx;
+    }
+  }
+
+  pub fn parallel_add(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
+    if self.stride() == 1 {
+      unsafe { densearray_omp_vector_add_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          x.as_ptr(),
+          alpha,
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
+  pub fn parallel_average(&'a mut self, alpha: f32, x: Array1dView<'a, f32>) {
+    if self.stride() == 1 {
+      unsafe { densearray_omp_vector_average_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          x.as_ptr(),
+          alpha,
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
+  pub fn parallel_elem_mult(&'a mut self, /*alpha: f32,*/ x: Array1dView<'a, f32>) {
+    if self.stride() == 1 {
+      unsafe { densearray_omp_elem_mult_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          x.as_ptr(),
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
+  pub fn parallel_elem_div(&'a mut self, x: Array1dView<'a, f32>) {
+    if self.stride() == 1 {
+      unsafe { densearray_omp_elem_div_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          x.as_ptr(),
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
+  pub fn parallel_elem_ldiv(&'a mut self, x: Array1dView<'a, f32>) {
+    if self.stride() == 1 {
+      unsafe { densearray_omp_elem_ldiv_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          x.as_ptr(),
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+}
+
 impl<'a> Array2dViewMut<'a, f32> {
   pub fn parallel_matrix_prod(&'a mut self, alpha: f32, a: Array2dView<'a, f32>, a_trans: Transpose, b: Array2dView<'a, f32>, b_trans: Transpose, beta: f32) {
     let (a_m, a_n) = a.dim();

@@ -1,12 +1,14 @@
 #![feature(zero_one)]
 
-extern crate densearray_kernels;
+//extern crate densearray_kernels;
 
 extern crate byteorder;
 extern crate cblas_ffi;
 #[cfg(feature = "mkl_parallel")]
 extern crate mkl_ffi;
 extern crate openblas_ffi;
+
+extern crate libc;
 
 use std::marker::{PhantomData};
 use std::mem::{size_of};

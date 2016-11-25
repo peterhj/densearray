@@ -7,18 +7,25 @@ description = "N-dimensional dense arrays."
 repository = "https://github.com/peterhj/libdensearray"
 keywords = ["array", "ndarray", "dense", "tensor", "algebra"]
 readme = "README.md"
+build = "build.rs"
 
 [features]
 default = []
 mkl_parallel = ["mkl_link/openmp"]
+knl = []
 
 [lib]
 name = "densearray"
 path = "src/lib.rs"
 
+[build-dependencies]
+gcc = "*"
+walkdir = "*"
+
 [dependencies]
-densearray_kernels = { path = "kernels", version = "0.0.1" }
+#densearray_kernels = { path = "kernels", version = "0.0.1" }
 byteorder = "^0.5"
 cblas_ffi = "^0.1"
+libc = "*"
 mkl_link = { version = "^0.1", optional = true }
 openblas_ffi = { version = "^0.1"}
