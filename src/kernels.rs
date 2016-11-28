@@ -12,6 +12,10 @@ extern "C" {}
 
 #[link(name = "densearray_kernels", kind = "static")]
 extern "C" {
+  pub fn densearray_set_scalar_f32(
+      dst: *mut f32,
+      dim: size_t,
+      c: f32);
   pub fn densearray_copy_f32(
       dst: *mut f32,
       dim: size_t,
@@ -63,6 +67,10 @@ extern "C" {
 
 #[link(name = "densearray_omp_kernels", kind = "static")]
 extern "C" {
+  pub fn densearray_omp_set_scalar_f32(
+      dst: *mut f32,
+      dim: size_t,
+      c: f32);
   pub fn densearray_omp_copy_f32(
       dst: *mut f32,
       dim: size_t,

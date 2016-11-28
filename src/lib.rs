@@ -1,3 +1,4 @@
+#![feature(specialization)]
 #![feature(zero_one)]
 
 //extern crate densearray_kernels;
@@ -9,6 +10,8 @@ extern crate mkl_link;
 extern crate openblas_ffi;
 
 extern crate libc;
+
+use kernels::*;
 
 use std::marker::{PhantomData};
 use std::mem::{size_of};
@@ -492,6 +495,24 @@ impl<'a, T> Array1dViewMut<'a, T> where T: 'a + Copy {
       unimplemented!();
     }
   }
+
+  /*pub default fn parallel_set_constant(&'a mut self, c: T) {
+    unimplemented!();
+  }*/
+}
+
+impl<'a> Array1dViewMut<'a, f32> {
+  pub fn parallel_set_constant(&'a mut self, c: f32) {
+    if self.stride == 1 {
+      unsafe { densearray_omp_set_scalar_f32(
+          self.buf.as_mut_ptr(),
+          self.dim,
+          c,
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
 }
 
 #[derive(Clone)]
@@ -826,6 +847,24 @@ impl<'a, T> Array4dViewMut<'a, T> where T: 'a + Copy {
       for i in 0 .. self.dim.flat_len() {
         self.buf[i] = c;
       }
+    } else {
+      unimplemented!();
+    }
+  }
+
+  /*pub default fn parallel_set_constant(&'a mut self, c: T) {
+    unimplemented!();
+  }*/
+}
+
+impl<'a> Array4dViewMut<'a, f32> {
+  pub fn parallel_set_constant(&'a mut self, c: f32) {
+    if self.stride == self.dim.least_stride() {
+      unsafe { densearray_omp_set_scalar_f32(
+          self.buf.as_mut_ptr(),
+          self.dim.flat_len(),
+          c,
+      ) };
     } else {
       unimplemented!();
     }

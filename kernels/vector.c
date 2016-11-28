@@ -3,6 +3,17 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+void DENSEARRAY_SYMBOL(set_scalar_f32)(
+    float *dst,
+    size_t dim,
+    float c)
+{
+  #pragma omp parallel for
+  for (size_t idx = 0; idx < dim; idx++) {
+    dst[idx] = c;
+  }
+}
+
 void DENSEARRAY_SYMBOL(copy_f32)(
     float *dst,
     size_t dim,
