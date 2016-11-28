@@ -669,6 +669,20 @@ impl<'a, T> Array2dViewMut<'a, T> where T: 'a + Copy {
   }
 }
 
+impl<'a> Array2dViewMut<'a, f32> {
+  pub fn parallel_set_constant(&'a mut self, c: f32) {
+    if self.stride == self.dim.least_stride() {
+      unsafe { densearray_omp_set_scalar_f32(
+          self.buf.as_mut_ptr(),
+          self.dim.flat_len(),
+          c,
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+}
+
 #[derive(Clone)]
 pub struct Array3d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
   buf:      S,
