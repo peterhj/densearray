@@ -418,6 +418,7 @@ impl<'a, T, S> AsViewMut<'a, Array1dViewMut<'a, T>> for Array1d<T, S> where T: C
   }
 }
 
+#[derive(Clone, Copy)]
 pub struct Array1dView<'a, T> where T: 'a + Copy {
   buf:      &'a [T],
   dim:      usize,
@@ -590,6 +591,7 @@ impl<'a, T, S> AsViewMut<'a, Array2dViewMut<'a, T>> for Array2d<T, S> where T: C
   }
 }
 
+#[derive(Clone, Copy)]
 pub struct Array2dView<'a, T> where T: 'a + Copy {
   buf:      &'a [T],
   dim:      (usize, usize),
@@ -817,6 +819,7 @@ impl<'a, T, S> AsViewMut<'a, Array4dViewMut<'a, T>> for Array4d<T, S> where T: C
   }
 }
 
+#[derive(Clone, Copy)]
 pub struct Array4dView<'a, T> where T: 'a + Copy {
   buf:      &'a [T],
   dim:      (usize, usize, usize, usize),
