@@ -66,6 +66,19 @@ impl<'a> Array1dViewMut<'a, f32> {
     }
   }
 
+  pub fn parallel_cast(&'a mut self, src: Array1dView<'a, u8>) {
+    assert_eq!(self.dim(), src.dim());
+    if self.stride() == 1 {
+      unsafe { densearray_omp_cast_u8_to_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+          src.buf.as_ptr(),
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
   pub fn parallel_add_scalar(&'a mut self, c: f32) {
     if self.stride() == 1 {
       unsafe { densearray_omp_add_scalar_f32(

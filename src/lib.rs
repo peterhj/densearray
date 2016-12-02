@@ -138,6 +138,14 @@ pub trait AliasBytesMut<'a, Target: ?Sized> {
   fn alias_bytes_mut(self) -> Target;
 }
 
+pub trait SetConstant<'a, T> {
+  fn set_constant(&'a mut self, c: T);
+}
+
+pub trait ParallelSetConstant<'a, T> {
+  fn parallel_set_constant(&'a mut self, c: T);
+}
+
 // FIXME(20161104): this should be removed in favor of impl functions.
 pub trait CastFrom<'a, Target: ?Sized> {
   fn cast_from(self, target: Target);
@@ -486,8 +494,10 @@ impl<'a, T> Array1dViewMut<'a, T> where T: 'a + Copy {
   pub fn as_mut_ptr(&mut self) -> *mut T {
     self.buf.as_mut_ptr()
   }
+}
 
-  pub fn set_constant(&'a mut self, c: T) {
+impl<'a, T> SetConstant<'a, T> for Array1dViewMut<'a, T> where T: 'a + Copy {
+  default fn set_constant(&'a mut self, c: T) {
     if self.stride == 1 {
       for i in 0 .. self.dim {
         self.buf[i] = c;
@@ -496,10 +506,34 @@ impl<'a, T> Array1dViewMut<'a, T> where T: 'a + Copy {
       unimplemented!();
     }
   }
+}
 
-  /*pub default fn parallel_set_constant(&'a mut self, c: T) {
-    unimplemented!();
-  }*/
+impl<'a> SetConstant<'a, f32> for Array1dViewMut<'a, f32> {
+  fn set_constant(&'a mut self, c: f32) {
+    if self.stride == 1 {
+      unsafe { densearray_set_scalar_f32(
+          self.buf.as_mut_ptr(),
+          self.dim,
+          c,
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+}
+
+impl<'a> SetConstant<'a, i32> for Array1dViewMut<'a, i32> {
+  fn set_constant(&'a mut self, c: i32) {
+    if self.stride == 1 {
+      unsafe { densearray_set_scalar_i32(
+          self.buf.as_mut_ptr(),
+          self.dim,
+          c,
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
 }
 
 impl<'a> Array1dViewMut<'a, f32> {

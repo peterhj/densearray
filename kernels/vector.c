@@ -14,6 +14,17 @@ void DENSEARRAY_SYMBOL(set_scalar_f32)(
   }
 }
 
+void DENSEARRAY_SYMBOL(set_scalar_i32)(
+    int32_t *dst,
+    size_t dim,
+    int32_t c)
+{
+  #pragma omp parallel for
+  for (size_t idx = 0; idx < dim; idx++) {
+    dst[idx] = c;
+  }
+}
+
 void DENSEARRAY_SYMBOL(copy_f32)(
     float *dst,
     size_t dim,
@@ -22,6 +33,17 @@ void DENSEARRAY_SYMBOL(copy_f32)(
   #pragma omp parallel for
   for (size_t idx = 0; idx < dim; idx++) {
     dst[idx] = src[idx];
+  }
+}
+
+void DENSEARRAY_SYMBOL(cast_u8_to_f32)(
+    float *dst,
+    size_t dim,
+    const uint8_t *src)
+{
+  #pragma omp parallel for
+  for (size_t idx = 0; idx < dim; idx++) {
+    dst[idx] = (float)(src[idx]);
   }
 }
 

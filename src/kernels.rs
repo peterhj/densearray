@@ -16,10 +16,18 @@ extern "C" {
       dst: *mut f32,
       dim: size_t,
       c: f32);
+  pub fn densearray_set_scalar_i32(
+      dst: *mut i32,
+      dim: size_t,
+      c: i32);
   pub fn densearray_copy_f32(
       dst: *mut f32,
       dim: size_t,
       src: *const f32);
+  pub fn densearray_cast_u8_to_f32(
+      dst: *mut f32,
+      dim: size_t,
+      src: *const u8);
   pub fn densearray_square_f32(
       dst: *mut f32,
       dim: size_t);
@@ -71,10 +79,18 @@ extern "C" {
       dst: *mut f32,
       dim: size_t,
       c: f32);
+  pub fn densearray_omp_set_scalar_i32(
+      dst: *mut i32,
+      dim: size_t,
+      c: i32);
   pub fn densearray_omp_copy_f32(
       dst: *mut f32,
       dim: size_t,
       src: *const f32);
+  pub fn densearray_omp_cast_u8_to_f32(
+      dst: *mut f32,
+      dim: size_t,
+      src: *const u8);
   pub fn densearray_omp_square_f32(
       dst: *mut f32,
       dim: size_t);

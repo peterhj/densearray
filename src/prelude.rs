@@ -1,5 +1,10 @@
 pub use super::{
-  ArrayIndex, AsView, AsViewMut, View, ViewMut, Reshape, ReshapeMut, AliasBytes, AliasBytesMut,
+  ArrayIndex,
+  AsView, AsViewMut,
+  View, ViewMut,
+  Reshape, ReshapeMut,
+  AliasBytes, AliasBytesMut,
+  SetConstant, ParallelSetConstant,
   Array1d, Array1dView, Array1dViewMut,
   Array2d, Array2dView, Array2dViewMut,
   Array3d, //Array3dView, Array3dViewMut,
