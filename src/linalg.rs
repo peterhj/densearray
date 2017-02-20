@@ -11,6 +11,19 @@ pub enum Transpose {
 }
 
 impl<'a> Array1dView<'a, f32> {
+  pub fn l1_norm(&'a self) -> f32 {
+    let x_n = self.dim();
+    let incx = self.stride();
+    let mut p = 0;
+    let mut x_sum = 0.0;
+    for _ in 0 .. x_n {
+      let x_i = self.buf[p].abs();
+      x_sum += x_i;
+      p += incx;
+    }
+    x_sum
+  }
+
   pub fn l2_norm(&'a self) -> f32 {
     let n = self.dim();
     let incx = self.stride();
@@ -137,6 +150,17 @@ impl<'a> Array1dViewMut<'a, f32> {
     self.square();
   }
 
+  pub fn cube(&'a mut self) {
+    if self.stride() == 1 {
+      unsafe { densearray_cube_f32(
+          self.buf.as_mut_ptr(),
+          self.dim(),
+      ) };
+    } else {
+      unimplemented!();
+    }
+  }
+
   pub fn sqrt(&'a mut self) {
     if self.stride() == 1 {
       unsafe { densearray_sqrt_f32(
@@ -246,6 +270,65 @@ impl<'a> Array1dViewMut<'a, f32> {
     } else {
       unimplemented!();
     }
+  }
+
+  pub fn matrix_vector_prod(&'a mut self, alpha: f32, a: Array2dView<'a, f32>, a_trans: Transpose, x: Array1dView<'a, f32>, beta: f32) {
+    let (a_m, a_n) = a.dim();
+    let x_n = x.dim();
+    let y_m = self.dim();
+    let (at_m, at_n) = match a_trans {
+      Transpose::N => (a_m, a_n),
+      Transpose::T => (a_n, a_m),
+    };
+    assert_eq!(y_m, at_m);
+    assert_eq!(x_n, at_n);
+    let k = at_n;
+    let (a_inc, lda) = a.stride();
+    let x_inc = x.stride();
+    let y_inc = self.stride();
+    assert_eq!(1, a_inc);
+    unsafe { openblas_sequential_cblas_sgemv(
+        CblasOrder::ColMajor,
+        match a_trans {
+          Transpose::N => CblasTranspose::NoTrans,
+          Transpose::T => CblasTranspose::Trans,
+        },
+        a_m as _, a_n as _,
+        alpha,
+        a.buf.as_ptr(), lda as _,
+        x.buf.as_ptr(), x_inc as _,
+        beta,
+        self.buf.as_mut_ptr(), y_inc as _,
+    ) };
+  }
+
+  pub fn symm_linear_solve(&'a mut self, a: Array2dViewMut<'a, f32>, b: Array1dView<'a, f32>) {
+    let (a_m, n) = a.dim();
+    let b_n = b.dim();
+    let x_n = self.dim();
+    assert_eq!(a_m, n);
+    assert_eq!(b_n, n);
+    assert_eq!(x_n, n);
+    let (a_inc, lda) = a.stride();
+    let b_inc = b.stride();
+    let x_inc = self.stride();
+    assert_eq!(1, a_inc);
+    assert_eq!(1, b_inc);
+    assert_eq!(1, x_inc);
+    unsafe { openblas_sequential_LAPACKE_spotrf(
+        CblasOrder::ColMajor as i32,
+        'L' as i8,
+        n as _,
+        a.buf.as_mut_ptr(), lda as _,
+    ) };
+    { self.buf.copy_from_slice(b.buf) };
+    unsafe { openblas_sequential_LAPACKE_spotrs(
+        CblasOrder::ColMajor as i32,
+        'L' as i8,
+        n as _, 1,
+        a.buf.as_ptr(), lda as _,
+        self.buf.as_mut_ptr(), n as _,
+    ) };
   }
 }
 

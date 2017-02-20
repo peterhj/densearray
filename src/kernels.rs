@@ -31,6 +31,9 @@ extern "C" {
   pub fn densearray_square_f32(
       dst: *mut f32,
       dim: size_t);
+  pub fn densearray_cube_f32(
+      dst: *mut f32,
+      dim: size_t);
   pub fn densearray_sqrt_f32(
       dst: *mut f32,
       dim: size_t);

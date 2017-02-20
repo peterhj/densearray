@@ -1,7 +1,8 @@
 pub use super::{
-  ArrayIndex,
+  ArrayIndex, Axes,
   AsView, AsViewMut,
   View, ViewMut,
+  Flatten, FlattenMut,
   Reshape, ReshapeMut,
   AliasBytes, AliasBytesMut,
   SetConstant, ParallelSetConstant,
@@ -9,6 +10,7 @@ pub use super::{
   Array2d, Array2dView, Array2dViewMut,
   Array3d, //Array3dView, Array3dViewMut,
   Array4d, Array4dView, Array4dViewMut,
+  Batch, BatchArray1d, BatchArray3d,
 };
 pub use linalg::*;
 pub use serial::{NdArrayDtype, NdArrayDeserialize, NdArraySerialize};

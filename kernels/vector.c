@@ -58,6 +58,17 @@ void DENSEARRAY_SYMBOL(square_f32)(
   }
 }
 
+void DENSEARRAY_SYMBOL(cube_f32)(
+    float *dst,
+    size_t dim)
+{
+  #pragma omp parallel for
+  for (size_t idx = 0; idx < dim; idx++) {
+    float y = dst[idx];
+    dst[idx] = y * y * y;
+  }
+}
+
 void DENSEARRAY_SYMBOL(sqrt_f32)(
     float *dst,
     size_t dim)
