@@ -2,7 +2,7 @@
 name = "densearray"
 version = "0.1.1"
 authors = ["Peter Jin <peterhaijin@gmail.com>"]
-license = "BSD-2-Clause"
+license = "Apache-2.0"
 description = "N-dimensional dense arrays."
 repository = "https://github.com/peterhj/libdensearray"
 keywords = ["array", "ndarray", "dense", "tensor", "algebra"]
