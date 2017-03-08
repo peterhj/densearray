@@ -4,7 +4,7 @@ version = "0.1.1"
 authors = ["Peter Jin <peterhaijin@gmail.com>"]
 license = "Apache-2.0"
 description = "N-dimensional dense arrays."
-repository = "https://github.com/peterhj/libdensearray"
+repository = "https://github.com/peterhj/densearray"
 keywords = ["array", "ndarray", "dense", "tensor", "algebra"]
 readme = "README.md"
 build = "build.rs"
@@ -28,4 +28,4 @@ byteorder = "^0.5"
 cblas_ffi = "^0.1"
 libc = "*"
 mkl_link = { version = "^0.1", optional = true }
-openblas_ffi = { version = "^0.1"}
+openblas_ffi = { version = "^0.1", features = ["parallel"] }

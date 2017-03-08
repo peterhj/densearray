@@ -498,6 +498,18 @@ impl<T, S> Array1d<T, S> where T: Copy, S: Deref<Target=[T]> {
     }
   }
 
+  pub fn into_storage(self) -> S {
+    self.buf
+  }
+
+  pub fn storage(&self) -> &S {
+    &self.buf
+  }
+
+  pub fn mut_storage(&mut self) -> &mut S {
+    &mut self.buf
+  }
+
   pub fn dim(&self) -> usize {
     self.dim
   }
@@ -698,17 +710,16 @@ impl<T, S> Array2d<T, S> where T: Copy, S: Deref<Target=[T]> {
     }
   }
 
-  /*pub fn _upgrade_3d(self) -> Array3d<T, S> {
-    Array3d{
-      buf:      self.buf,
-      dim:      (self.dim.0, self.dim.1, 1),
-      stride:   (self.stride.0, self.stride.1, self.stride.flat_len()),
-      _marker:  PhantomData,
-    }
-  }*/
+  pub fn into_storage(self) -> S {
+    self.buf
+  }
 
   pub fn storage(&self) -> &S {
     &self.buf
+  }
+
+  pub fn mut_storage(&mut self) -> &mut S {
+    &mut self.buf
   }
 
   pub fn dim(&self) -> (usize, usize) {

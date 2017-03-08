@@ -25,6 +25,7 @@ fn main() {
     .flag("-march=native")
     .flag("-fno-strict-aliasing")
     .flag("-Ikernels")
+    .file("kernels/reduce.c")
     .file("kernels/vector.c")
     .compile("libdensearray_kernels.a");
   if cfg!(not(feature = "knl")) {

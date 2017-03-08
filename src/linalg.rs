@@ -422,3 +422,19 @@ impl<'a> Array2dViewMut<'a, f64> {
     unimplemented!();
   }
 }
+
+pub fn symmetric_tridiagonal_eigenvalues_workspace_size(dim: usize) -> usize {
+  // TODO: LAPACK `sstebz`.
+  unimplemented!();
+}
+
+pub fn solve_symmetric_tridiagonal_eigenvalues(
+    diag: &[f32],
+    offdiag: &[f32],
+    eigenvals: &mut [f32],
+    workspace: &mut [u8],
+) -> Result<usize, ()>
+{
+  // TODO: LAPACK `sstebz`.
+  unimplemented!();
+}
