@@ -24,7 +24,7 @@ void densearray_kernel_elem_increduce_mean_f32(
   }
 }
 
-void densearray_kernel_elem_increduce_ustats2_f32(
+void densearray_kernel_elem_increduce_stats2_f32(
     size_t dim,
     size_t prev_count,
     const float *x,
@@ -41,7 +41,7 @@ void densearray_kernel_elem_increduce_ustats2_f32(
   }
 }
 
-void densearray_kernel_elem_increduce_ustats4_f32(
+void densearray_kernel_elem_increduce_stats4_f32(
     size_t dim,
     size_t prev_count,
     const float *x,
@@ -65,7 +65,7 @@ void densearray_kernel_elem_increduce_ustats4_f32(
   }
 }
 
-void densearray_kernel_elem_postreduce_uvar_f32(
+void densearray_kernel_elem_postreduce_var_f32(
     size_t dim,
     size_t count,
     float *uvar)
@@ -77,7 +77,7 @@ void densearray_kernel_elem_postreduce_uvar_f32(
   }
 }
 
-void densearray_kernel_elem_postreduce_ucm3_f32(
+void densearray_kernel_elem_postreduce_cm3_f32(
     size_t dim,
     size_t count,
     float *ucm3)
@@ -90,7 +90,7 @@ void densearray_kernel_elem_postreduce_ucm3_f32(
   }
 }
 
-void densearray_kernel_elem_postreduce_ucm4_f32(
+void densearray_kernel_elem_postreduce_cm4_f32(
     size_t dim,
     size_t count,
     const float *uvar,

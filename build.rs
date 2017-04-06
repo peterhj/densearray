@@ -16,18 +16,22 @@ fn main() {
     let entry = entry.unwrap();
     println!("cargo:rerun-if-changed={}", entry.path().display());
   }
+
   let cc = env::var("CC").unwrap_or("gcc".to_owned());
   gcc::Config::new()
     .compiler(&cc)
     .opt_level(3)
     .pic(true)
     .flag("-std=gnu99")
+    .flag("-mfpmath=sse")
     .flag("-march=native")
     .flag("-fno-strict-aliasing")
     .flag("-Ikernels")
+    .file("kernels/cast.c")
     .file("kernels/reduce.c")
     .file("kernels/vector.c")
     .compile("libdensearray_kernels.a");
+
   if cfg!(not(feature = "knl")) {
     gcc::Config::new()
       .compiler(&cc)

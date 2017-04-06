@@ -423,18 +423,50 @@ impl<'a> Array2dViewMut<'a, f64> {
   }
 }
 
-pub fn symmetric_tridiagonal_eigenvalues_workspace_size(dim: usize) -> usize {
+/*pub fn symmetric_tridiagonal_eigenvalues_workspace_size(dim: usize) -> usize {
   // TODO: LAPACK `sstebz`.
   unimplemented!();
-}
+}*/
 
 pub fn solve_symmetric_tridiagonal_eigenvalues(
     diag: &[f32],
     offdiag: &[f32],
     eigenvals: &mut [f32],
-    workspace: &mut [u8],
+    //workspace: &mut [u8],
+    abs_tol: f32,
 ) -> Result<usize, ()>
 {
-  // TODO: LAPACK `sstebz`.
-  unimplemented!();
+  let n = diag.len();
+  assert_eq!(n - 1, offdiag.len());
+  assert_eq!(n, eigenvals.len());
+  for i in 0 .. n {
+    eigenvals[i] = 0.0;
+  }
+  let mut m: i32 = 0;
+  let mut nsplit: i32 = 0;
+  /*let mut w: Vec<f32> = Vec::with_capacity(n);
+  w.resize(n, 0.0);*/
+  let mut iblock: Vec<i32> = Vec::with_capacity(n);
+  iblock.resize(n, 0);
+  let mut isplit: Vec<i32> = Vec::with_capacity(n);
+  isplit.resize(n, 0);
+  let status = unsafe { openblas_sequential_LAPACKE_sstebz(
+      'A' as i8,
+      'E' as i8,
+      n as _,
+      0.0, 0.0,
+      0, 0,
+      abs_tol,
+      diag.as_ptr(),
+      offdiag.as_ptr(),
+      &mut m as *mut _,
+      &mut nsplit as *mut _,
+      eigenvals.as_mut_ptr(),
+      iblock.as_mut_ptr(),
+      isplit.as_mut_ptr(),
+  ) };
+  if status < 0 {
+    return Err(());
+  }
+  Ok(m as usize)
 }

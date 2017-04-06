@@ -25,6 +25,10 @@ pub mod parallel_linalg;
 pub mod prelude;
 pub mod serial;
 
+pub trait Extract<Target: ?Sized> {
+  fn extract(&self, dst: &mut Target) -> Result<usize, ()>;
+}
+
 pub trait ArrayIndex: Copy {
   type Axes: Copy;
 
@@ -117,11 +121,11 @@ impl ArrayIndex for (usize, usize, usize, usize) {
   }
 }
 
-pub trait Flatten<'a, Target> {
+pub trait FlatView<'a, Target> {
   fn flatten(self) -> Target;
 }
 
-pub trait FlattenMut<'a, Target> {
+pub trait FlatViewMut<'a, Target> {
   fn flatten_mut(self) -> Target;
 }
 
@@ -198,7 +202,15 @@ impl<'a> AliasBytesMut<'a, &'a mut [f32]> for &'a mut [u8] {
   }
 }
 
-impl<'a, T> Flatten<'a, Array1dView<'a, T>> for &'a [T] where T: Copy {
+impl<'a> AliasBytes<'a, &'a [u8]> for &'a [f32] {
+  fn alias_bytes(self) -> &'a [u8] {
+    let elems_sz = self.len();
+    let bytes_sz = elems_sz * size_of::<f32>();
+    unsafe { from_raw_parts(self.as_ptr() as *const u8, bytes_sz) }
+  }
+}
+
+impl<'a, T> FlatView<'a, Array1dView<'a, T>> for &'a [T] where T: Copy {
   fn flatten(self) -> Array1dView<'a, T> {
     let len = self.len();
     self.reshape(len)
@@ -217,7 +229,7 @@ impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for &'a [T] where T: Copy {
   }
 }
 
-impl<'a, T> FlattenMut<'a, Array1dViewMut<'a, T>> for &'a mut [T] where T: Copy {
+impl<'a, T> FlatViewMut<'a, Array1dViewMut<'a, T>> for &'a mut [T] where T: Copy {
   fn flatten_mut(self) -> Array1dViewMut<'a, T> {
     let len = self.len();
     self.reshape_mut(len)
@@ -326,7 +338,7 @@ impl<'a, T> ReshapeMut<'a, (usize, usize), Array2dViewMut<'a, T>> for Array1dVie
   }
 }
 
-impl<'a, T> Flatten<'a, Array1dView<'a, T>> for Array2dView<'a, T> where T: Copy {
+impl<'a, T> FlatView<'a, Array1dView<'a, T>> for Array2dView<'a, T> where T: Copy {
   fn flatten(self) -> Array1dView<'a, T> {
     let len = self.dim.flat_len();
     self.reshape(len)
@@ -345,7 +357,7 @@ impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for Array2dView<'a, T> where 
   }
 }
 
-impl<'a, T> FlattenMut<'a, Array1dViewMut<'a, T>> for Array2dViewMut<'a, T> where T: Copy {
+impl<'a, T> FlatViewMut<'a, Array1dViewMut<'a, T>> for Array2dViewMut<'a, T> where T: Copy {
   fn flatten_mut(self) -> Array1dViewMut<'a, T> {
     let len = self.dim.flat_len();
     self.reshape_mut(len)
@@ -364,7 +376,7 @@ impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for Array2dViewMut<'a, 
   }
 }
 
-impl<'a, T> Flatten<'a, Array1dView<'a, T>> for Array3dView<'a, T> where T: Copy {
+impl<'a, T> FlatView<'a, Array1dView<'a, T>> for Array3dView<'a, T> where T: Copy {
   fn flatten(self) -> Array1dView<'a, T> {
     let len = self.dim.flat_len();
     self.reshape(len)
@@ -383,7 +395,7 @@ impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for Array3dView<'a, T> where 
   }
 }
 
-impl<'a, T> FlattenMut<'a, Array1dViewMut<'a, T>> for Array3dViewMut<'a, T> where T: Copy {
+impl<'a, T> FlatViewMut<'a, Array1dViewMut<'a, T>> for Array3dViewMut<'a, T> where T: Copy {
   fn flatten_mut(self) -> Array1dViewMut<'a, T> {
     let len = self.dim.flat_len();
     self.reshape_mut(len)
@@ -402,7 +414,7 @@ impl<'a, T> ReshapeMut<'a, usize, Array1dViewMut<'a, T>> for Array3dViewMut<'a, 
   }
 }
 
-impl<'a, T> Flatten<'a, Array1dView<'a, T>> for Array4dView<'a, T> where T: Copy {
+impl<'a, T> FlatView<'a, Array1dView<'a, T>> for Array4dView<'a, T> where T: Copy {
   fn flatten(self) -> Array1dView<'a, T> {
     let len = self.dim.flat_len();
     self.reshape(len)
@@ -421,7 +433,7 @@ impl<'a, T> Reshape<'a, usize, Array1dView<'a, T>> for Array4dView<'a, T> where 
   }
 }
 
-impl<'a, T> FlattenMut<'a, Array1dViewMut<'a, T>> for Array4dViewMut<'a, T> where T: Copy {
+impl<'a, T> FlatViewMut<'a, Array1dViewMut<'a, T>> for Array4dViewMut<'a, T> where T: Copy {
   fn flatten_mut(self) -> Array1dViewMut<'a, T> {
     let len = self.dim.flat_len();
     self.reshape_mut(len)
@@ -670,6 +682,26 @@ impl<'a> Array1dViewMut<'a, f32> {
     } else {
       unimplemented!();
     }
+  }
+}
+
+impl<'a> Array1dViewMut<'a, f32> {
+  pub fn cast_from_u8(&'a mut self, src: Array1dView<'a, u8>) {
+    unsafe { densearray_kernel_cast_1d_u8_to_f32(
+        self.dim,
+        src.as_ptr(),
+        self.as_mut_ptr(),
+    ) };
+  }
+}
+
+impl<'a> Array1dViewMut<'a, u8> {
+  pub fn round_clamp_from_f32(&'a mut self, src: Array1dView<'a, f32>) {
+    unsafe { densearray_kernel_round_clamp_1d_f32_to_u8_sse2(
+        self.dim,
+        src.as_ptr(),
+        self.as_mut_ptr(),
+    ) };
   }
 }
 

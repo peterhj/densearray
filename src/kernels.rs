@@ -12,6 +12,15 @@ extern "C" {}
 
 #[link(name = "densearray_kernels", kind = "static")]
 extern "C" {
+  pub fn densearray_kernel_cast_1d_u8_to_f32(
+      dim: usize,
+      src: *const u8,
+      dst: *mut f32);
+  pub fn densearray_kernel_round_clamp_1d_f32_to_u8_sse2(
+      dim: usize,
+      src: *const f32,
+      dst: *mut u8);
+
   pub fn densearray_set_scalar_f32(
       dst: *mut f32,
       dim: size_t,

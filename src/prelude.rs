@@ -1,8 +1,9 @@
 pub use super::{
+  Extract,
   ArrayIndex, Axes,
   AsView, AsViewMut,
   View, ViewMut,
-  Flatten, FlattenMut,
+  FlatView, FlatViewMut,
   Reshape, ReshapeMut,
   AliasBytes, AliasBytesMut,
   SetConstant, ParallelSetConstant,
