@@ -20,6 +20,16 @@ extern "C" {
       dim: usize,
       src: *const f32,
       dst: *mut u8);
+  pub fn densearray_kernel_round_clamp_1d_f32_to_u8_sse4(
+      dim: usize,
+      src: *const f32,
+      dst: *mut u8);
+  pub fn densearray_kernel_clamp_1d_f32_sse2(
+      dim: usize,
+      src: *const f32,
+      dst: *mut f32,
+      lowerf: f32,
+      upperf: f32);
 
   pub fn densearray_set_scalar_f32(
       dst: *mut f32,

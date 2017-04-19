@@ -29,3 +29,4 @@ cblas_ffi = "^0.1"
 libc = "*"
 mkl_link = { version = "^0.1", optional = true }
 openblas_ffi = { version = "^0.1", features = ["parallel"] }
+sharedmem = "*"

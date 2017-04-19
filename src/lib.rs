@@ -8,6 +8,7 @@ extern crate cblas_ffi;
 #[cfg(feature = "mkl_parallel")]
 extern crate mkl_link;
 extern crate openblas_ffi;
+extern crate sharedmem;
 
 extern crate libc;
 
@@ -17,8 +18,11 @@ use std::marker::{PhantomData};
 use std::mem::{size_of};
 use std::num::{Zero};
 use std::ops::{Deref, DerefMut};
+use std::rc::{Rc};
 use std::slice::{from_raw_parts, from_raw_parts_mut};
+use std::sync::{Arc};
 
+pub mod io;
 pub mod kernels;
 pub mod linalg;
 pub mod parallel_linalg;
@@ -27,6 +31,18 @@ pub mod serial;
 
 pub trait Extract<Target: ?Sized> {
   fn extract(&self, dst: &mut Target) -> Result<usize, ()>;
+
+  fn from_shared(obj: Arc<Self>) -> Arc<Extract<Target>> where Self: 'static + Sized {
+    obj
+  }
+
+  fn into_extract(self) -> Rc<Extract<Target>> where Self: 'static + Sized {
+    Rc::new(self)
+  }
+
+  fn into_shared_extract(self) -> Arc<Extract<Target>> where Self: 'static + Sized {
+    Arc::new(self)
+  }
 }
 
 pub trait ArrayIndex: Copy {
@@ -697,7 +713,7 @@ impl<'a> Array1dViewMut<'a, f32> {
 
 impl<'a> Array1dViewMut<'a, u8> {
   pub fn round_clamp_from_f32(&'a mut self, src: Array1dView<'a, f32>) {
-    unsafe { densearray_kernel_round_clamp_1d_f32_to_u8_sse2(
+    unsafe { densearray_kernel_round_clamp_1d_f32_to_u8_sse4(
         self.dim,
         src.as_ptr(),
         self.as_mut_ptr(),

@@ -20,7 +20,7 @@ fn main() {
   let cc = env::var("CC").unwrap_or("gcc".to_owned());
   gcc::Config::new()
     .compiler(&cc)
-    .opt_level(3)
+    .opt_level(2)
     .pic(true)
     .flag("-std=gnu99")
     .flag("-mfpmath=sse")
@@ -35,7 +35,7 @@ fn main() {
   if cfg!(not(feature = "knl")) {
     gcc::Config::new()
       .compiler(&cc)
-      .opt_level(3)
+      .opt_level(2)
       .pic(true)
       .flag("-std=gnu99")
       .flag("-march=native")
