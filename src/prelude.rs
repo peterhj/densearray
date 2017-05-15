@@ -1,4 +1,5 @@
 pub use super::{
+  ZeroBits,
   Extract,
   ArrayIndex, Axes,
   AsView, AsViewMut,

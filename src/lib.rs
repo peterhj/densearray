@@ -1,5 +1,5 @@
 #![feature(specialization)]
-#![feature(zero_one)]
+//#![feature(zero_one)]
 
 //extern crate densearray_kernels;
 
@@ -16,7 +16,7 @@ use kernels::*;
 
 use std::marker::{PhantomData};
 use std::mem::{size_of};
-use std::num::{Zero};
+//use std::num::{Zero};
 use std::ops::{Deref, DerefMut};
 use std::rc::{Rc};
 use std::slice::{from_raw_parts, from_raw_parts_mut};
@@ -28,6 +28,21 @@ pub mod linalg;
 pub mod parallel_linalg;
 pub mod prelude;
 pub mod serial;
+
+pub trait ZeroBits: Copy {
+  fn zero_bits() -> Self where Self: Sized;
+}
+
+impl ZeroBits for f32 { fn zero_bits() -> Self { 0.0 } }
+impl ZeroBits for f64 { fn zero_bits() -> Self { 0.0 } }
+impl ZeroBits for u8  { fn zero_bits() -> Self { 0 } }
+impl ZeroBits for u16 { fn zero_bits() -> Self { 0 } }
+impl ZeroBits for u32 { fn zero_bits() -> Self { 0 } }
+impl ZeroBits for u64 { fn zero_bits() -> Self { 0 } }
+impl ZeroBits for i8  { fn zero_bits() -> Self { 0 } }
+impl ZeroBits for i16 { fn zero_bits() -> Self { 0 } }
+impl ZeroBits for i32 { fn zero_bits() -> Self { 0 } }
+impl ZeroBits for i64 { fn zero_bits() -> Self { 0 } }
 
 pub trait Extract<Target: ?Sized> {
   fn extract(&self, dst: &mut Target) -> Result<usize, ()>;
@@ -42,6 +57,12 @@ pub trait Extract<Target: ?Sized> {
 
   fn into_shared_extract(self) -> Arc<Extract<Target>> where Self: 'static + Sized {
     Arc::new(self)
+  }
+}
+
+impl<A: ?Sized> Extract<A> for () {
+  fn extract(&self, dst: &mut A) -> Result<usize, ()> {
+    Ok(0)
   }
 }
 
@@ -502,10 +523,10 @@ pub struct Array1d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
   _marker:  PhantomData<T>,
 }
 
-impl<T> Array1d<T> where T: Copy + Zero {
+impl<T> Array1d<T> where T: Copy + ZeroBits {
   pub fn zeros(dim: usize) -> Array1d<T> {
     let mut data = Vec::with_capacity(dim);
-    data.resize(dim, T::zero());
+    data.resize(dim, T::zero_bits());
     Array1d{
       buf:      data,
       dim:      dim,
@@ -729,15 +750,15 @@ pub struct Array2d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
   _marker:  PhantomData<T>,
 }
 
-impl<T> Array2d<T> where T: Copy + Zero {
+impl<T> Array2d<T> where T: Copy + ZeroBits {
   pub fn zeros(dim: (usize, usize)) -> Array2d<T> {
     let len = dim.flat_len();
     let mut data = Vec::with_capacity(len);
     /*unsafe { data.set_len(len) };
     for i in 0 .. len {
-      data[i] = T::zero();
+      data[i] = T::zero_bits();
     }*/
-    data.resize(len, T::zero());
+    data.resize(len, T::zero_bits());
     Array2d{
       buf:      data,
       dim:      dim,
@@ -911,15 +932,15 @@ pub struct Array3d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
   _marker:  PhantomData<T>,
 }
 
-impl<T> Array3d<T> where T: Copy + Zero {
+impl<T> Array3d<T> where T: Copy + ZeroBits {
   pub fn zeros(dim: (usize, usize, usize)) -> Array3d<T> {
     let len = dim.flat_len();
     let mut data = Vec::with_capacity(len);
     /*unsafe { data.set_len(len) };
     for i in 0 .. len {
-      data[i] = T::zero();
+      data[i] = T::zero_bits();
     }*/
-    data.resize(len, T::zero());
+    data.resize(len, T::zero_bits());
     Array3d{
       buf:      data,
       dim:      dim,
@@ -1046,15 +1067,15 @@ pub struct Array4d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
   _marker:  PhantomData<T>,
 }
 
-impl<T> Array4d<T> where T: Copy + Zero {
+impl<T> Array4d<T> where T: Copy + ZeroBits {
   pub fn zeros(dim: (usize, usize, usize, usize)) -> Array4d<T> {
     let len = dim.flat_len();
     let mut data = Vec::with_capacity(len);
     /*unsafe { data.set_len(len) };
     for i in 0 .. len {
-      data[i] = T::zero();
+      data[i] = T::zero_bits();
     }*/
-    data.resize(len, T::zero());
+    data.resize(len, T::zero_bits());
     Array4d{
       buf:      data,
       dim:      dim,
@@ -1234,11 +1255,11 @@ pub struct BatchArray1d<T, S=Vec<T>> where T: Copy, S: Deref<Target=[T]> {
   batch_stride: usize,
 }
 
-impl<T> BatchArray1d<T> where T: Copy + Zero {
+impl<T> BatchArray1d<T> where T: Copy + ZeroBits {
   pub fn zeros(dim: usize, batch_cap: usize) -> BatchArray1d<T> {
     let len = dim.flat_len() * batch_cap;
     let mut data = Vec::with_capacity(len);
-    data.resize(len, T::zero());
+    data.resize(len, T::zero_bits());
     Self::from_storage(dim, batch_cap, data)
   }
 }

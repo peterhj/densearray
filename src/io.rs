@@ -3,8 +3,70 @@ use super::*;
 use byteorder::*;
 use sharedmem::*;
 
-use std::io::{Read};
-use std::slice::{from_raw_parts_mut};
+use std::cmp::{max};
+//use std::collections::{VecDeque};
+use std::io::{Read, Write};
+use std::mem::{size_of};
+use std::slice::{from_raw_parts, from_raw_parts_mut};
+
+pub fn write_flat_buf<T, W>(writer: &mut W, buf: &[T]) -> Result<(), ()> where T: Copy, W: Write {
+  let num_bytes = buf.len() * size_of::<T>();
+  let byte_buf = unsafe { from_raw_parts(buf.as_ptr() as *const u8, num_bytes) };
+  writer.write_all(byte_buf).unwrap();
+  Ok(())
+}
+
+pub fn read_flat_buf<T, R>(num_bytes: usize, reader: &mut R) -> Result<Vec<T>, ()> where T: Copy, R: Read {
+  let cache_sz = max(16, (size_of::<T>() + 4096 - 1) / 4096) * 4096;
+  let num_elems = num_bytes / size_of::<T>();
+  assert_eq!(0, num_bytes % size_of::<T>());
+  let mut buf = Vec::with_capacity(num_elems);
+  let mut cache = Vec::with_capacity(cache_sz);
+  cache.resize(cache_sz, 0);
+  let mut cache_count = 0;
+  let mut total_count = 0;
+  loop {
+    match reader.read(&mut cache) {
+      Err(_) => return Err(()),
+      Ok(count) => {
+        cache_count += count;
+        total_count += count;
+        //assert_eq!(cache.len(), cache_count);
+        if cache_count >= cache_sz {
+          let cache_elems = cache_count / size_of::<T>();
+          let num_leftover_bytes = cache_count - cache_elems * size_of::<T>();
+          let elem_buf = unsafe { from_raw_parts(cache.as_ptr() as *const T, cache_elems) };
+          buf.extend_from_slice(elem_buf);
+          if num_leftover_bytes > 0 {
+            // FIXME
+            unimplemented!();
+          }
+          cache.clear();
+          cache.resize(cache_sz, 0);
+          cache_count = 0;
+        }
+        if count == 0 || total_count >= num_bytes {
+          break;
+        }
+      }
+    }
+  }
+  if cache_count > 0 {
+    let cache_elems = cache_count / size_of::<T>();
+    let num_leftover_bytes = cache_count - cache_elems * size_of::<T>();
+    let elem_buf = unsafe { from_raw_parts(cache.as_ptr() as *const T, cache_elems) };
+    buf.extend_from_slice(elem_buf);
+    if num_leftover_bytes > 0 {
+      // FIXME
+      unimplemented!();
+    }
+    cache.clear();
+    cache_count = 0;
+  }
+  assert_eq!(total_count, num_bytes);
+  assert_eq!(buf.len(), num_elems);
+  Ok(buf)
+}
 
 pub trait NdReader {
   fn deserialize(reader: &mut Read) -> Result<Self, ()> where Self: Sized;

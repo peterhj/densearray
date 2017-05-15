@@ -1,10 +1,10 @@
-use super::{Array1d, Array2d, Array3d};
+use super::{ZeroBits, Array1d, Array2d, Array3d};
 
 use byteorder::{ReadBytesExt, LittleEndian};
 
 use std::io::{Read, Write};
 use std::mem::{size_of};
-use std::num::{Zero};
+//use std::num::{Zero};
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 
 pub trait NdArrayDtype: Copy {
@@ -51,7 +51,7 @@ impl<T> NdArraySerialize for Array2d<T> where T: NdArrayDtype {
   }
 }
 
-impl<T> NdArrayDeserialize for Array3d<T> where T: NdArrayDtype + Zero {
+impl<T> NdArrayDeserialize for Array3d<T> where T: NdArrayDtype + ZeroBits {
   fn deserialize(reader: &mut Read) -> Result<Array3d<T>, ()> {
     let magic0 = reader.read_u8()
       .ok().expect("failed to deserialize!");
@@ -99,7 +99,7 @@ impl<T> NdArrayDeserialize for Array3d<T> where T: NdArrayDtype + Zero {
   }
 }
 
-impl<T> NdArraySerialize for Array3d<T> where T: NdArrayDtype + Zero {
+impl<T> NdArraySerialize for Array3d<T> where T: NdArrayDtype + ZeroBits {
   fn serialize(&self, writer: &mut Write) -> Result<(), ()> {
     unimplemented!();
   }
