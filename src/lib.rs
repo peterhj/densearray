@@ -46,6 +46,7 @@ impl ZeroBits for i64 { fn zero_bits() -> Self { 0 } }
 
 pub trait Extract<Target: ?Sized> {
   fn extract(&self, dst: &mut Target) -> Result<usize, ()>;
+  fn extractable_size(&self) -> Option<usize> { None }
 
   fn from_shared(obj: Arc<Self>) -> Arc<Extract<Target>> where Self: 'static + Sized {
     obj
